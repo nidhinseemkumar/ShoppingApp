@@ -1,0 +1,130 @@
+@model IEnumerable<ShoppingApp.Models.Product>
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center py-5 bg-light mb-4 rounded shadow-sm">
+    <h1 class="display-4 font-weight-bold">Welcome to Nidhin's Store</h1>
+    <p class="lead">Premium gadgets and apparel at your fingertips.</p>
+</div>
+
+<div class="row mb-5">
+    <div class="col-md-4 text-center">
+        <div class="p-3">
+            <h3 class="h5">Fast Delivery</h3>
+            <p class="text-muted small">Get your items within 24 hours in Kochi.</p>
+        </div>
+    </div>
+    <div class="col-md-4 text-center">
+        <div class="p-3">
+            <h3 class="h5">Secure Payment</h3>
+            <p class="text-muted small">Multiple payment methods supported.</p>
+        </div>
+    </div>
+    <div class="col-md-4 text-center">
+        <div class="p-3">
+            <h3 class="h5">24/7 Support</h3>
+            <p class="text-muted small">We are here to help you anytime.</p>
+        </div>
+    </div>
+</div>
+
+<h2 class="mb-4">Our Products</h2>
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0 transition-hover">
+                <div class="card-body text-center">
+                    <div class="bg-light mb-3 rounded" style="height: 180px; display: flex; align-items: center; justify-content: center;">
+                        <span class="text-muted">📦 @item.Name</span>
+                    </div>
+                    <h5 class="card-title font-weight-bold">@item.Name</h5>
+                    <p class="card-text text-muted small">@item.Description</p>
+                    <h4 class="text-primary font-weight-bold">₹@item.Price</h4>
+                </div>
+                <div class="card-footer bg-white border-top-0 pb-3" id="cart-controls-@item.ProductId">
+                    @{
+                        var cartItems = ViewBag.CartItems as Dictionary<int, int>;
+                        var quantity = (cartItems != null && cartItems.ContainsKey(item.ProductId)) ? cartItems[item.ProductId] : 0;
+                    }
+
+                    @if (quantity > 0)
+                    {
+                        <div class="input-group">
+                            <button onclick="updateCart(@item.ProductId, -1)" class="btn btn-outline-secondary btn-sm rounded-left">-</button>
+                            <span class="form-control text-center font-weight-bold py-1" id="qty-@item.ProductId">@quantity</span>
+                            <button onclick="updateCart(@item.ProductId, 1)" class="btn btn-outline-secondary btn-sm rounded-right">+</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <button onclick="addToCart(@item.ProductId)" class="btn btn-primary w-100 rounded-pill">🛒 Add to Cart</button>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        async function addToCart(productId) {
+            const response = await fetch(`/Carts/AddToCart?productId=${productId}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                renderCartControls(productId, data.newQuantity);
+            } else if (data.redirect) {
+                window.location.href = data.redirect;
+            }
+        }
+
+        async function updateCart(productId, change) {
+            const response = await fetch(`/Carts/UpdateQuantity?productId=${productId}&change=${change}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                if (data.newQuantity > 0) {
+                    document.getElementById(`qty-${productId}`).innerText = data.newQuantity;
+                } else {
+                    renderAddToCartButton(productId);
+                }
+            }
+        }
+
+        function renderCartControls(productId, quantity) {
+            const container = document.getElementById(`cart-controls-${productId}`);
+            container.innerHTML = `
+                <div class="input-group">
+                    <button onclick="updateCart(${productId}, -1)" class="btn btn-outline-secondary btn-sm rounded-left">-</button>
+                    <span class="form-control text-center font-weight-bold py-1" id="qty-${productId}">${quantity}</span>
+                    <button onclick="updateCart(${productId}, 1)" class="btn btn-outline-secondary btn-sm rounded-right">+</button>
+                </div>
+            `;
+        }
+
+        function renderAddToCartButton(productId) {
+            const container = document.getElementById(`cart-controls-${productId}`);
+            container.innerHTML = `
+                <button onclick="addToCart(${productId})" class="btn btn-primary w-100 rounded-pill">🛒 Add to Cart</button>
+            `;
+        }
+    </script>
+}
+
+<style>
+    .transition-hover {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .transition-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+</style>
