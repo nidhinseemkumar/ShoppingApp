@@ -1,0 +1,193 @@
+@using System.Globalization
+@model IEnumerable<ShoppingApp.DTOs.ProductDto>
+
+@{
+    ViewData["Title"] = "Our Products";
+    var indianCulture = new CultureInfo("en-IN");
+}
+
+<div class="container py-5">
+    @Html.AntiForgeryToken()
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-6">
+            @if (!string.IsNullOrEmpty(ViewData["CurrentSearch"] as string))
+            {
+                <h1 class="display-4 fw-bold mb-0">Search Results for <span class="text-primary">"@ViewData["CurrentSearch"]"</span></h1>
+                <p class="lead text-muted mt-2"><a asp-action="Index" class="text-decoration-none small">Clear Search</a></p>
+            }
+            else if (!string.IsNullOrEmpty(ViewData["CurrentCategory"] as string))
+            {
+                <h1 class="display-4 fw-bold mb-0">Category: <span class="text-primary">@ViewData["CurrentCategory"]</span></h1>
+                <p class="lead text-muted mt-2"><a asp-action="Index" class="text-decoration-none small">Show All Categories</a></p>
+            }
+            else
+            {
+                <h1 class="display-4 fw-bold mb-0">Discover Our <span class="text-primary">Products</span></h1>
+                <p class="lead text-muted mt-2">Curated selection of premium items just for you.</p>
+            }
+        </div>
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="col-md-6 text-md-end">
+                <a asp-action="Create" class="btn btn-dark rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-plus-lg me-1"></i> Add New Product
+                </a>
+            </div>
+        }
+    </div>
+
+    <div class="row g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col-sm-6 col-lg-4 col-xl-3">
+                <div class="card h-100 border-0 shadow-sm product-card transition-all rounded-4 overflow-hidden">
+                    <div class="position-relative bg-light d-flex align-items-center justify-content-center overflow-hidden" style="height: 280px;">
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? $"https://via.placeholder.com/400x400?text={item.Name}" : item.ImageUrl)" 
+                             class="card-img-top h-100 w-100 object-fit-contain transition-scale p-3" 
+                             alt="@item.Name" 
+                             onerror="handleImageError(this)">
+                        <div class="product-overlay d-flex align-items-center justify-content-center">
+                            <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-light rounded-pill px-4 shadow-sm fw-bold">
+                                View Details
+                            </a>
+                        </div>
+                        @if (item.Stock <= 5 && item.Stock > 0)
+                        {
+                            <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-3 rounded-pill shadow-sm">Low Stock</span>
+                        }
+                    </div>
+                    <div class="card-body d-flex flex-column p-4">
+                        <div class="mb-2">
+                            <span class="text-uppercase text-primary fw-bold small tracking-wider">@item.CategoryName</span>
+                        </div>
+                        <h5 class="card-title fw-bold mb-2 text-truncate" title="@item.Name">@item.Name</h5>
+                        <p class="card-text text-muted small mb-4 line-clamp-2" style="height: 40px;">@item.Description</p>
+                        
+                        <div class="mt-auto">
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <!-- Admin Management -->
+                                <div class="admin-management mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="fw-bold text-primary fs-5">₹@item.Price.ToString("N2", indianCulture)</span>
+                                        <span class="small text-muted">Stock: <span class="fw-bold @(item.Stock < 10 ? "text-danger" : "")">@item.Stock</span></span>
+                                    </div>
+                                    
+                                    @if (item.Stock < 10)
+                                    {
+                                        <div class="alert alert-warning py-2 px-3 border-0 rounded-4 mb-3 small d-flex align-items-center">
+                                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                            <strong>CRITICAL:</strong> Stock below 10 units!
+                                        </div>
+                                    }
+
+                                    <div class="d-grid gap-2">
+                                        <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-dark rounded-pill py-2 fw-bold shadow-sm">
+                                            <i class="bi bi-gear-fill me-2"></i>Manage Product
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <!-- Customer Purchase Tools -->
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <span class="fw-bold fs-5 text-primary">₹@item.Price.ToString("N2", indianCulture)</span>
+                                    @{
+                                        var cartItems = ViewData["UserCart"] as IEnumerable<ShoppingApp.Models.Cart>;
+                                        var cartItem = cartItems?.FirstOrDefault(c => c.ProductId == item.ProductId);
+                                    }
+
+                                    @if (cartItem != null)
+                                    {
+                                        <div class="input-group input-group-sm w-auto shadow-sm rounded-pill border overflow-hidden">
+                                            <button onclick="updateCart(@item.ProductId, -1, this)" class="btn btn-light border-0 px-2">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                            <span class="input-group-text bg-white border-0 fw-bold px-2 cart-quantity">@cartItem.Quantity</span>
+                                            <button onclick="updateCart(@item.ProductId, 1, this)" class="btn btn-light border-0 px-2">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button onclick="updateCart(@item.ProductId, 1, this)" class="btn btn-primary rounded-pill px-4 fw-bold">
+                                            Add
+                                        </button>
+                                    }
+                                </div>
+                                
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    @if (item.Stock > 0)
+                                    {
+                                        <span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i>In Stock</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger small"><i class="bi bi-x-circle-fill me-1"></i>Out of Stock</span>
+                                    }
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <a asp-controller="Carts" asp-action="BuyNow" asp-route-productId="@item.ProductId" 
+                                       class="btn btn-primary rounded-pill transition-all shadow-sm fw-bold">
+                                        <i class="bi bi-lightning-fill me-2"></i>Buy Now
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .product-card {
+        background: #ffffff;
+    }
+    .product-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+    }
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    .transition-scale {
+        transition: transform 0.5s ease;
+    }
+    .product-card:hover .transition-scale {
+        transform: scale(1.1);
+    }
+    .product-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.2);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .product-card:hover .product-overlay {
+        opacity: 1;
+    }
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .tracking-wider {
+        letter-spacing: 0.05em;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+        border: none;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #0b5ed7 0%, #0a58ca 100%);
+    }
+</style>

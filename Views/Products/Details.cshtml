@@ -1,48 +1,115 @@
-﻿@model ShoppingApp.Models.Product
+@using System.Globalization
+@model ShoppingApp.DTOs.ProductDto
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = Model.Name + " - Details";
+    var indianCulture = new CultureInfo("en-IN");
 }
 
-<h1>Details</h1>
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="product-image-container p-4 rounded-5 bg-white shadow-sm border border-light">
+                <img src="@(string.IsNullOrEmpty(Model?.ImageUrl) ? $"https://via.placeholder.com/600x600?text={Model?.Name}" : Model.ImageUrl)" 
+                     class="img-fluid rounded-4 w-100" alt="@Model?.Name"
+                     onerror="handleImageError(this)">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb bg-transparent p-0">
+                    <li class="breadcrumb-item"><a asp-action="Index">Products</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+                </ol>
+            </nav>
+            <h1 class="display-5 fw-bold mb-2">@Model.Name</h1>
+            <p class="text-muted mb-4">Category: <span class="badge bg-secondary">@Model.CategoryName</span></p>
+            
+            <div class="d-flex align-items-center mb-4">
+                <h2 class="text-primary fw-bold me-3 mb-0">₹@Model.Price.ToString("N2", indianCulture)</h2>
+                @if (Model.Stock > 0)
+                {
+                    <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">In Stock (@Model.Stock)</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3">Out of Stock</span>
+                }
+            </div>
 
-<div>
-    <h4>Product</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Price)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Stock)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Stock)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Category)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Category.CategoryId)
-        </dd>
-    </dl>
+            <p class="lead text-secondary mb-5">
+                @Model.Description
+            </p>
+
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    @{
+                        var cartItems = ViewData["UserCart"] as IEnumerable<ShoppingApp.Models.Cart>;
+                        var cartItem = cartItems?.FirstOrDefault(c => c.ProductId == Model.ProductId);
+                    }
+
+                    @if (cartItem != null)
+                    {
+                        <div class="input-group input-group-lg shadow-sm rounded-pill border overflow-hidden">
+                            <button onclick="updateCart(@Model.ProductId, -1, this)" class="btn btn-light border-0 px-4">
+                                <i class="bi bi-dash-lg"></i>
+                            </button>
+                            <span class="input-group-text bg-white border-0 fw-bold px-4 flex-grow-1 justify-content-center fs-4 cart-quantity">@cartItem.Quantity</span>
+                            <button onclick="updateCart(@Model.ProductId, 1, this)" class="btn btn-light border-0 px-4">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <button onclick="updateCart(@Model.ProductId, 1, this)" 
+                           class="btn btn-outline-primary btn-lg w-100 rounded-pill shadow-sm">
+                            <i class="bi bi-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    }
+                </div>
+                <div class="col-sm-6">
+                    <a asp-controller="Carts" asp-action="BuyNow" asp-route-productId="@Model.ProductId" 
+                       class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">
+                        <i class="bi bi-lightning-fill me-2"></i>Buy Now
+                    </a>
+                </div>
+            </div>
+
+            <hr class="my-5 text-muted">
+            
+            <div class="d-flex align-items-center gap-3">
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-action="Edit" asp-route-id="@Model?.ProductId" class="btn btn-link text-decoration-none p-0 text-dark">
+                        <i class="bi bi-pencil-square me-1"></i>Edit Product
+                    </a>
+                    <span class="text-muted">|</span>
+                }
+                <a asp-action="Index" class="btn btn-link text-decoration-none p-0 text-dark">
+                    <i class="bi bi-arrow-left me-1"></i>Back to List
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.ProductId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+
+<style>
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: ">";
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+        border: none;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #0b5ed7 0%, #0a58ca 100%);
+        transform: translateY(-2px);
+    }
+    .btn-outline-primary:hover {
+        transform: translateY(-2px);
+    }
+    .card {
+        transition: transform 0.3s ease;
+    }
+</style>

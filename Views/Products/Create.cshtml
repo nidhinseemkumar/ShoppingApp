@@ -1,52 +1,171 @@
-﻿@model ShoppingApp.Models.Product
+@model ShoppingApp.Models.Product
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Add New Product";
+    var categories = ViewBag.AllCategories as IEnumerable<ShoppingApp.Models.Category>;
 }
 
-<h1>Create</h1>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
+                <div class="card-header bg-primary text-white py-4 px-5">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-white text-primary rounded-4 p-2 me-3 shadow-sm">
+                            <i class="bi bi-plus-circle-fill fs-3"></i>
+                        </div>
+                        <div>
+                            <h2 class="fw-bold mb-0">Add New Product</h2>
+                            <p class="mb-0 text-white-50">Expand your inventory with premium items.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-5">
+                    <form asp-action="Create" class="needs-validation" novalidate>
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4"></div>
 
-<h4>Product</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+                        <div class="row g-4 mb-4">
+                            <!-- Product Name -->
+                            <div class="col-md-12">
+                                <label asp-for="Name" class="form-label fw-bold">Product Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 px-3"><i class="bi bi-tag text-muted"></i></span>
+                                    <input asp-for="Name" class="form-control bg-light border-0 rounded-end-4 py-3" placeholder="e.g., Premium Headphones" required pattern="^[a-zA-Z0-9\s\-_]+$" />
+                                </div>
+                                <span asp-validation-for="Name" class="text-danger small ms-2"></span>
+                                <div class="invalid-feedback ms-2">Product name is required and should contain only alphanumeric characters.</div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="col-md-12">
+                                <label asp-for="Description" class="form-label fw-bold">Description</label>
+                                <textarea asp-for="Description" class="form-control bg-light border-0 rounded-4 py-3" rows="3" placeholder="Describe the product features..." required></textarea>
+                                <span asp-validation-for="Description" class="text-danger small ms-2"></span>
+                                <div class="invalid-feedback ms-2">Please provide a product description.</div>
+                            </div>
+
+                            <!-- Price & Stock -->
+                            <div class="col-md-6">
+                                <label asp-for="Price" class="form-label fw-bold">Price (₹)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 px-3"><i class="bi bi-currency-rupee text-muted"></i></span>
+                                    <input asp-for="Price" type="number" step="0.01" class="form-control bg-light border-0 rounded-end-4 py-3" placeholder="0.00" required min="0.01" />
+                                </div>
+                                <span asp-validation-for="Price" class="text-danger small ms-2"></span>
+                                <div class="invalid-feedback ms-2">Please enter a valid price greater than 0.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Stock" class="form-label fw-bold">Stock Quantity</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 px-3"><i class="bi bi-stack text-muted"></i></span>
+                                    <input asp-for="Stock" type="number" class="form-control bg-light border-0 rounded-end-4 py-3" placeholder="0" required min="0" />
+                                </div>
+                                <span asp-validation-for="Stock" class="text-danger small ms-2"></span>
+                                <div class="invalid-feedback ms-2">Please enter stock quantity (0 or more).</div>
+                            </div>
+
+                            <!-- Category Autocomplete -->
+                            <div class="col-md-12">
+                                <label for="categoryName" class="form-label fw-bold">Category</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 px-3"><i class="bi bi-grid text-muted"></i></span>
+                                    <input name="categoryName" list="categoryOptions" class="form-control bg-light border-0 rounded-end-4 py-3" placeholder="Type to search or add new category..." required id="categoryInput" />
+                                    <datalist id="categoryOptions">
+                                        @if (categories != null)
+                                        {
+                                            @foreach (var cat in categories)
+                                            {
+                                                <option value="@cat.CategoryName"></option>
+                                            }
+                                        }
+                                    </datalist>
+                                </div>
+                                <div id="newCategoryBadge" class="mt-2" style="display: none;">
+                                    <span class="badge bg-info-subtle text-info rounded-pill px-3 py-2 border border-info-subtle">
+                                        <i class="bi bi-stars me-1"></i> New Category will be created
+                                    </span>
+                                </div>
+                                <div class="invalid-feedback ms-2">Category is required.</div>
+                            </div>
+
+                            <!-- Image URL -->
+                            <div class="col-md-12">
+                                <label asp-for="ImageUrl" class="form-label fw-bold">Product Image URL</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 px-3"><i class="bi bi-image text-muted"></i></span>
+                                    <input asp-for="ImageUrl" class="form-control bg-light border-0 rounded-end-4 py-3" placeholder="https://example.com/image.jpg" required type="url" />
+                                </div>
+                                <span asp-validation-for="ImageUrl" class="text-danger small ms-2"></span>
+                                <div class="invalid-feedback ms-2">Please provide a valid image URL.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold shadow flex-grow-1">
+                                <i class="bi bi-check-circle-fill me-2"></i>Create Product
+                            </button>
+                            <a asp-action="Dashboard" asp-controller="Admin" class="btn btn-outline-secondary btn-lg rounded-pill px-5 py-3 fw-bold">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Stock" class="control-label"></label>
-                <input asp-for="Stock" class="form-control" />
-                <span asp-validation-for="Stock" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CategoryId" class="control-label"></label>
-                <select asp-for="CategoryId" class ="form-control" asp-items="ViewBag.CategoryId"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+<style>
+    .icon-box {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .form-control:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        border: 1px solid rgba(13, 110, 253, 0.5) !important;
+    }
+    .input-group-text {
+        border: none;
+    }
+</style>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Custom Category Logic
+        const categoryInput = document.getElementById('categoryInput');
+        const categoryOptions = document.getElementById('categoryOptions');
+        const newCategoryBadge = document.getElementById('newCategoryBadge');
+        
+        const existingCategories = Array.from(categoryOptions.options).map(opt => opt.value.toLowerCase());
+
+        categoryInput.addEventListener('input', function() {
+            const val = this.value.trim().toLowerCase();
+            if (val && !existingCategories.includes(val)) {
+                newCategoryBadge.style.display = 'block';
+            } else {
+                newCategoryBadge.style.display = 'none';
+            }
+        });
+
+        // Bootstrap Validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
 }

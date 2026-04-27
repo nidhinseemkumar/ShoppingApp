@@ -1,0 +1,118 @@
+@using System.Globalization
+@model IEnumerable<ShoppingApp.Models.Order>
+
+@{
+    ViewData["Title"] = "My Orders";
+    var indianCulture = new CultureInfo("en-IN");
+}
+
+<div class="container py-5">
+    <div class="d-flex align-items-center justify-content-between mb-5">
+        <div>
+            <h1 class="display-4 fw-bold mb-0">Order <span class="text-primary">History</span></h1>
+            <p class="lead text-muted mt-2">Track and manage your previous purchases.</p>
+        </div>
+        <div class="icon-box bg-primary-subtle text-primary rounded-circle p-4">
+            <i class="bi bi-box-seam fs-1"></i>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 shadow-lg bg-white rounded-5 border-0">
+            <div class="mb-4">
+                <i class="bi bi-bag-x display-1 text-muted opacity-25"></i>
+            </div>
+            <h2 class="fw-bold">No orders found.</h2>
+            <p class="text-muted mb-4">Start shopping to see your orders here.</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg">Browse Products</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var order in Model.OrderByDescending(o => o.OrderDate))
+            {
+                <div class="col-12">
+                    <div class="card border-0 shadow-lg rounded-5 overflow-hidden order-card">
+                        <div class="card-header bg-white border-0 p-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <div class="text-muted small text-uppercase fw-bold letter-spacing-1 mb-1">Order ID</div>
+                                    <div class="fw-bold fs-5">#@order.OrderId</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-muted small text-uppercase fw-bold letter-spacing-1 mb-1">Date Placed</div>
+                                    <div class="fw-bold small">@order.OrderDate?.ToString("MMM dd, yyyy")</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-muted small text-uppercase fw-bold letter-spacing-1 mb-1">Payment</div>
+                                    <div class="fw-bold small">
+                                        <i class="bi bi-wallet2 me-1"></i>
+                                        @(order.Payments?.FirstOrDefault()?.PaymentMethod ?? "N/A")
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-md-center">
+                                    <div class="text-muted small text-uppercase fw-bold letter-spacing-1 mb-1">Amount</div>
+                                    <div class="fw-bold text-primary">₹@((order.TotalAmount ?? 0).ToString("N2", indianCulture))</div>
+                                </div>
+                                <div class="col-md-3 text-md-end">
+                                    @{
+                                        var statusClass = order.Status == "Paid" ? "bg-success text-success" : 
+                                                         order.Status == "Completed" ? "bg-info text-info" : "bg-warning text-warning";
+                                    }
+                                    <span class="badge @statusClass bg-opacity-10 border @statusClass border-opacity-25 rounded-pill px-4 py-2">
+                                        <i class="bi bi-dot me-1"></i>@order.Status
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0 border-top border-light">
+                            <div class="table-responsive">
+                                <table class="table table-borderless align-middle mb-0">
+                                    <thead class="bg-light-subtle">
+                                        <tr>
+                                            <th class="ps-4 py-3 text-muted small text-uppercase">Items in this order</th>
+                                            <th class="py-3 text-center text-muted small text-uppercase">Quantity</th>
+                                            <th class="pe-4 py-3 text-end text-muted small text-uppercase">Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in order.OrderItems)
+                                        {
+                                            <tr>
+                                                <td class="ps-4 py-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="product-thumb-sm me-3 rounded-3 bg-light p-1" style="width: 50px; height: 50px;">
+                                                            <img src="@(string.IsNullOrEmpty(item.Product?.ImageUrl) ? $"https://via.placeholder.com/50?text={item.Product?.Name}" : item.Product.ImageUrl)" 
+                                                                 class="img-fluid rounded-2 h-100 w-100 object-fit-cover" 
+                                                                 alt="@item.Product?.Name" 
+                                                                 onerror="handleImageError(this)">
+                                                        </div>
+                                                        <span class="fw-semibold">@(item.Product?.Name ?? "Premium Product")</span>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center fw-bold">@item.Quantity</td>
+                                                <td class="pe-4 text-end text-muted">₹@((item.Price ?? 0).ToString("N2", indianCulture))</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light p-3 text-center">
+                            <a href="#" class="btn btn-link text-decoration-none text-muted small"><i class="bi bi-file-earmark-pdf me-2"></i>Download Invoice</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .bg-light-subtle { background-color: #f8f9fa; }
+    .order-card { transition: transform 0.2s; }
+    .order-card:hover { transform: translateY(-3px); }
+</style>

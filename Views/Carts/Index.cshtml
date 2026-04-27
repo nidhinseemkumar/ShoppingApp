@@ -1,94 +1,136 @@
+@using System.Globalization
 @model IEnumerable<ShoppingApp.Models.Cart>
+@inject ShoppingApp.Services.ICartService CartService
 
 @{
     ViewData["Title"] = "Your Shopping Cart";
-    decimal total = Model.Sum(item => (item.Product.Price ?? 0) * (item.Quantity ?? 0));
+    decimal total = Model.Sum(item => (item.Product?.Price ?? 0) * (item.Quantity ?? 0));
+    var indianCulture = new CultureInfo("en-IN");
 }
 
-<div class="row">
-    <div class="col-md-12 mb-4">
-        <h1 class="font-weight-bold">🛒 Shopping Cart</h1>
-        <p class="text-muted">Manage your items and proceed to checkout.</p>
+<div class="container py-5">
+    <div class="row align-items-center mb-5">
+        <div class="col-md-6">
+            <h1 class="display-4 fw-bold mb-0">Shopping <span class="text-primary">Cart</span></h1>
+            <p class="lead text-muted mt-2">Check your items and proceed to secure payment.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <span class="badge bg-white text-dark border rounded-pill px-4 py-2 shadow-sm fs-6">
+                <i class="bi bi-cart3 me-2"></i>@Model.Sum(i => i.Quantity) Items
+            </span>
+        </div>
     </div>
-</div>
 
-@if (!Model.Any())
-{
-    <div class="text-center py-5 shadow-sm bg-white rounded">
-        <h3>Your cart is empty.</h3>
-        <p class="text-muted">Explore our latest products on the home page.</p>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-pill px-4">Continue Shopping</a>
-    </div>
-}
-else
-{
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body p-0">
-                    <table class="table table-hover mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="border-0 px-4">Product</th>
-                                <th class="border-0 text-center">Quantity</th>
-                                <th class="border-0 text-right">Price</th>
-                                <th class="border-0 text-right pr-4">Subtotal</th>
-                                <th class="border-0"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model)
-                            {
-                                var itemSubtotal = (item.Product.Price ?? 0) * (item.Quantity ?? 0);
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 shadow-lg bg-white rounded-5 border-0">
+            <div class="mb-4">
+                <i class="bi bi-cart-x display-1 text-muted opacity-25"></i>
+            </div>
+            <h2 class="fw-bold">Your cart is empty.</h2>
+            <p class="text-muted mb-4">Looks like you haven't added anything yet.</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg transition-all">Start Shopping</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light-subtle">
                                 <tr>
-                                    <td class="align-middle px-4">
-                                        <div class="font-weight-bold">@item.Product.Name</div>
-                                    </td>
-                                    <td class="align-middle text-center" style="width: 150px;">
-                                        <div class="input-group input-group-sm justify-content-center">
-                                            <a asp-action="UpdateQuantity" asp-route-productId="@item.ProductId" asp-route-change="-1" 
-                                               class="btn btn-outline-secondary">-</a>
-                                            <span class="form-control text-center font-weight-bold" style="max-width: 50px;">@item.Quantity</span>
-                                            <a asp-action="UpdateQuantity" asp-route-productId="@item.ProductId" asp-route-change="1" 
-                                               class="btn btn-outline-secondary">+</a>
-                                        </div>
-                                    </td>
-                                    <td class="align-middle text-right">₹@item.Product.Price</td>
-                                    <td class="align-middle text-right pr-4">₹@itemSubtotal</td>
-                                    <td class="align-middle text-right pr-3">
-                                        <a asp-action="Delete" asp-route-id="@item.CartId" class="text-danger" title="Remove Item">
-                                            <span style="font-size: 1.2rem;">&times;</span>
-                                        </a>
-                                    </td>
+                                    <th class="border-0 px-4 py-3 text-muted small text-uppercase">Product</th>
+                                    <th class="border-0 py-3 text-center text-muted small text-uppercase">Quantity</th>
+                                    <th class="border-0 py-3 text-end text-muted small text-uppercase">Price</th>
+                                    <th class="border-0 px-4 py-3 text-end text-muted small text-uppercase">Total</th>
+                                    <th class="border-0"></th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    var itemSubtotal = (item.Product?.Price ?? 0) * (item.Quantity ?? 0);
+                                    <tr>
+                                        <td class="px-4 py-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="product-thumb me-3 rounded-4 bg-light p-1 border overflow-hidden" style="width: 70px; height: 70px;">
+                                                    <img src="@(string.IsNullOrEmpty(item.Product?.ImageUrl) ? $"https://via.placeholder.com/100?text={item.Product?.Name}" : item.Product.ImageUrl)" 
+                                                         class="img-fluid rounded-3 h-100 w-100 object-fit-cover" 
+                                                         alt="@item.Product?.Name" 
+                                                         onerror="handleImageError(this)">
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold mb-0">@item.Product?.Name</h6>
+                                                    <small class="text-muted">@item.Product?.Category?.CategoryName</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="input-group input-group-sm justify-content-center">
+                                                <button onclick="updateCart(@item.ProductId, -1, this)" class="btn btn-light border rounded-pill-start px-2">
+                                                    <i class="bi bi-dash"></i>
+                                                </button>
+                                                <span class="input-group-text bg-white border-x-0 fw-bold px-3 cart-quantity">@item.Quantity</span>
+                                                <button onclick="updateCart(@item.ProductId, 1, this)" class="btn btn-light border rounded-pill-end px-2">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="text-end fw-semibold">₹@((item.Product?.Price ?? 0).ToString("N2", indianCulture))</td>
+                                        <td class="text-end px-4 fw-bold text-primary">₹@(itemSubtotal.ToString("N2", indianCulture))</td>
+                                        <td class="text-end pe-4">
+                                            <div class="d-flex gap-2 justify-content-end">
+                                                <a asp-action="BuyNow" asp-route-productId="@item.ProductId" class="btn btn-sm btn-outline-success rounded-pill px-3">Buy Now</a>
+                                                <a asp-action="Delete" asp-route-id="@item.CartId" class="btn btn-sm btn-link text-danger p-0" title="Remove">
+                                                    <i class="bi bi-trash fs-5"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title font-weight-bold mb-4">Order Summary</h5>
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-lg rounded-5 p-4 sticky-top" style="top: 120px;">
+                    <h5 class="fw-bold mb-4">Order Summary</h5>
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Items Total</span>
-                        <span>₹@total</span>
+                        <span class="text-muted">Subtotal</span>
+                        <span class="fw-semibold">₹@total.ToString("N2", indianCulture)</span>
                     </div>
                     <div class="d-flex justify-content-between mb-4">
-                        <span>Delivery</span>
-                        <span class="text-success">FREE</span>
+                        <span class="text-muted">Estimated Delivery</span>
+                        <span class="text-success fw-bold">FREE</span>
                     </div>
-                    <hr>
-                    <div class="d-flex justify-content-between mb-4 font-weight-bold">
-                        <span class="h5">Total</span>
-                        <span class="h5 text-primary">₹@total</span>
+                    <hr class="my-4 opacity-5">
+                    <div class="d-flex justify-content-between mb-5">
+                        <h4 class="fw-bold">Total Amount</h4>
+                        <h4 class="fw-bold text-primary">₹@total.ToString("N2", indianCulture)</h4>
                     </div>
-                    <a asp-action="Checkout" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">Proceed to Checkout</a>
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-link w-100 mt-2 text-muted">Continue Shopping</a>
+                    <a asp-action="Checkout" class="btn btn-primary btn-lg w-100 rounded-pill py-3 fw-bold shadow-lg transition-all mb-3">
+                        Proceed to Checkout <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-link w-100 text-muted small text-decoration-none">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Shopping
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
-}
+    }
+</div>
+
+<style>
+    .bg-light-subtle { background-color: #f8f9fa; }
+    .opacity-5 { opacity: 0.05; }
+    .rounded-pill-start { border-radius: 50px 0 0 50px !important; }
+    .rounded-pill-end { border-radius: 0 50px 50px 0 !important; }
+    .border-x-0 { border-left: 0; border-right: 0; }
+    .transition-all:hover { transform: translateY(-2px); }
+    .product-thumb:hover img { transform: scale(1.1); }
+    .product-thumb img { transition: transform 0.3s ease; }
+</style>

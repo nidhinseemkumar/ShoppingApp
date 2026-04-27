@@ -1,59 +1,138 @@
-﻿@model IEnumerable<ShoppingApp.Models.User>
+@model IEnumerable<ShoppingApp.DTOs.UserDto>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "User Management";
 }
 
-<h1>Index</h1>
+<div class="container py-5">
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-6">
+            <h1 class="display-5 fw-bold mb-0">User <span class="text-primary">Management</span></h1>
+            <p class="text-muted mt-2">Control access levels and manage platform members.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <div class="d-flex justify-content-md-end gap-2">
+                <form asp-action="Index" method="get" class="d-flex">
+                    <div class="input-group">
+                        <input type="text" name="searchTerm" class="form-control rounded-start-pill border-0 bg-light px-3" placeholder="Search users..." value="@ViewBag.CurrentSearch">
+                        <button type="submit" class="btn btn-light rounded-end-pill border-0 bg-light pe-3"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+                <a asp-action="Signup" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+                    <i class="bi bi-person-plus-fill me-2"></i>Add New
+                </a>
+            </div>
+        </div>
+    </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Password)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Phone)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Address)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Email)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Password)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Phone)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Address)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.UserId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.UserId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.UserId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-5 py-4 border-0 text-uppercase small fw-bold text-muted">User Info</th>
+                        <th class="py-4 border-0 text-uppercase small fw-bold text-muted">Contact</th>
+                        <th class="py-4 border-0 text-uppercase small fw-bold text-muted">Address</th>
+                        <th class="py-4 border-0 text-uppercase small fw-bold text-muted text-center">Role</th>
+                        <th class="pe-5 py-4 border-0 text-uppercase small fw-bold text-muted text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-5 py-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                                        <span class="fw-bold">@item.FirstName?[0]@item.LastName?[0]</span>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0">@item.Name</h6>
+                                        <span class="text-muted small">ID: #@item.UserId</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4">
+                                <div class="d-flex flex-column">
+                                    <span class="small"><i class="bi bi-envelope me-2 text-muted"></i>@item.Email</span>
+                                    <span class="small"><i class="bi bi-telephone me-2 text-muted"></i>@item.Phone</span>
+                                </div>
+                            </td>
+                            <td class="py-4">
+                                <span class="small text-muted line-clamp-1" style="max-width: 200px;" title="@item.Address">
+                                    @item.Address
+                                </span>
+                            </td>
+                            <td class="py-4 text-center">
+                                @if (item.Role == "Admin")
+                                {
+                                    <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2 border border-danger-subtle">
+                                        <i class="bi bi-shield-lock-fill me-1"></i> Admin
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 border border-success-subtle">
+                                        <i class="bi bi-person-fill me-1"></i> Customer
+                                    </span>
+                                }
+                            </td>
+                            <td class="pe-5 py-4 text-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-light btn-sm rounded-circle shadow-sm" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-4 p-2">
+                                        <li>
+                                            <form asp-action="ToggleRole" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.UserId" />
+                                                <button type="submit" class="dropdown-item rounded-3">
+                                                    <i class="bi bi-arrow-repeat me-2 text-primary"></i>
+                                                    @(item.Role == "Admin" ? "Demote to Customer" : "Promote to Admin")
+                                                </button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item rounded-3" asp-action="Edit" asp-route-id="@item.UserId">
+                                                <i class="bi bi-pencil-square me-2 text-info"></i>Edit Profile
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form asp-action="Delete" method="post" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.UserId" />
+                                                <button type="submit" class="dropdown-item rounded-3 text-danger">
+                                                    <i class="bi bi-trash3-fill me-2"></i>Delete User
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar {
+        transition: transform 0.3s ease;
+    }
+    tr:hover .avatar {
+        transform: scale(1.1);
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.02);
+    }
+    .line-clamp-1 {
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>

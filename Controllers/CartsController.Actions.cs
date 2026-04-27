@@ -1,8 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShoppingApp.Models;
 using ShoppingApp.Services;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 
 namespace ShoppingApp.Controllers
 {
@@ -18,9 +18,9 @@ namespace ShoppingApp.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> UpdateQuantity(int productId, int change)
         {
-            if (!User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated != true)
             {
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                if (Request.Headers.XRequestedWith == "XMLHttpRequest")
                 {
                     return Json(new { success = false, redirect = Url.Action("Login", "Users") });
                 }
@@ -31,17 +31,17 @@ namespace ShoppingApp.Controllers
             if (int.TryParse(userIdStr, out int userId))
             {
                 await _cartService.UpdateQuantityAsync(productId, userId, change);
-                
+
                 // If it's an AJAX request, return JSON
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                if (Request.Headers.XRequestedWith == "XMLHttpRequest")
                 {
                     var cartItems = await _cartService.GetCartItemsAsync(userId);
                     var newQuantity = cartItems.FirstOrDefault(c => c.ProductId == productId)?.Quantity ?? 0;
                     return Json(new { success = true, newQuantity = newQuantity });
                 }
             }
-            
-            var referer = Request.Headers["Referer"].ToString();
+
+            var referer = Request.Headers.Referer.ToString();
             if (string.IsNullOrEmpty(referer))
             {
                 return RedirectToAction("Index", "Home");
@@ -61,27 +61,32 @@ namespace ShoppingApp.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> AddToCart(int productId)
         {
-            if (!User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated != true)
             {
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                if (Request.Headers.XRequestedWith == "XMLHttpRequest")
                 {
                     return Json(new { success = false, redirect = Url.Action("Login", "Users") });
                 }
                 return RedirectToAction("Login", "Users", new { returnUrl = Request.Path + Request.QueryString });
             }
 
-            var userIdStr = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdStr, out int userId))
             {
                 await _cartService.AddToCartAsync(productId, userId);
-                
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+
+                if (Request.Headers.XRequestedWith == "XMLHttpRequest")
                 {
                     return Json(new { success = true, newQuantity = 1 });
                 }
             }
-            
-            return RedirectToAction("Index");
+
+            var referer = Request.Headers.Referer.ToString();
+            if (string.IsNullOrEmpty(referer))
+            {
+                return RedirectToAction("Index", "Products");
+            }
+            return Redirect(referer);
         }
     }
 }

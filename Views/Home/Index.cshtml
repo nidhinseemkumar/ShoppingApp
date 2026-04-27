@@ -1,130 +1,188 @@
-@model IEnumerable<ShoppingApp.Models.Product>
+@using System.Globalization
+@model IEnumerable<ShoppingApp.DTOs.ProductDto>
 
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "BuyNext - Your Everyday Super App";
+    var categories = ViewData["Categories"] as IEnumerable<ShoppingApp.Models.Category>;
+    var indianCulture = new CultureInfo("en-IN");
 }
 
-<div class="text-center py-5 bg-light mb-4 rounded shadow-sm">
-    <h1 class="display-4 font-weight-bold">Welcome to Nidhin's Store</h1>
-    <p class="lead">Premium gadgets and apparel at your fingertips.</p>
-</div>
-
-<div class="row mb-5">
-    <div class="col-md-4 text-center">
-        <div class="p-3">
-            <h3 class="h5">Fast Delivery</h3>
-            <p class="text-muted small">Get your items within 24 hours in Kochi.</p>
-        </div>
+<!-- Premium Hero Section -->
+<div class="hero-section text-white text-center py-5 rounded-5 mb-5 shadow-lg position-relative overflow-hidden" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);">
+    <div class="container py-5 position-relative z-1">
+        <h1 class="display-3 fw-bold mb-3 animate__animated animate__fadeInDown">Everything You Need, <br><span class="text-primary-gradient">In Just a Few Taps.</span></h1>
+        <p class="lead mb-0 opacity-75 animate__animated animate__fadeInUp animate__delay-1s">Premium quality, lightning speed, and prices you'll love.</p>
     </div>
-    <div class="col-md-4 text-center">
-        <div class="p-3">
-            <h3 class="h5">Secure Payment</h3>
-            <p class="text-muted small">Multiple payment methods supported.</p>
-        </div>
-    </div>
-    <div class="col-md-4 text-center">
-        <div class="p-3">
-            <h3 class="h5">24/7 Support</h3>
-            <p class="text-muted small">We are here to help you anytime.</p>
-        </div>
+    <div class="hero-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
     </div>
 </div>
 
-<h2 class="mb-4">Our Products</h2>
-
-<div class="row">
-    @foreach (var item in Model)
-    {
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm border-0 transition-hover">
-                <div class="card-body text-center">
-                    <div class="bg-light mb-3 rounded" style="height: 180px; display: flex; align-items: center; justify-content: center;">
-                        <span class="text-muted">📦 @item.Name</span>
-                    </div>
-                    <h5 class="card-title font-weight-bold">@item.Name</h5>
-                    <p class="card-text text-muted small">@item.Description</p>
-                    <h4 class="text-primary font-weight-bold">₹@item.Price</h4>
-                </div>
-                <div class="card-footer bg-white border-top-0 pb-3" id="cart-controls-@item.ProductId">
-                    @{
-                        var cartItems = ViewBag.CartItems as Dictionary<int, int>;
-                        var quantity = (cartItems != null && cartItems.ContainsKey(item.ProductId)) ? cartItems[item.ProductId] : 0;
-                    }
-
-                    @if (quantity > 0)
-                    {
-                        <div class="input-group">
-                            <button onclick="updateCart(@item.ProductId, -1)" class="btn btn-outline-secondary btn-sm rounded-left">-</button>
-                            <span class="form-control text-center font-weight-bold py-1" id="qty-@item.ProductId">@quantity</span>
-                            <button onclick="updateCart(@item.ProductId, 1)" class="btn btn-outline-secondary btn-sm rounded-right">+</button>
+<!-- Categories Section -->
+<div class="mb-5">
+    <h3 class="fw-bold mb-4">Shop by Category</h3>
+    <div class="row g-3">
+        @if (categories != null)
+        {
+            @foreach (var cat in categories)
+            {
+                <div class="col-4 col-sm-3 col-md-2">
+                    <a asp-controller="Products" asp-action="Index" asp-route-category="@cat.CategoryName" class="text-decoration-none">
+                        <div class="category-card-compact text-center p-2 rounded-4 transition-all">
+                            <div class="category-icon-small mb-2 mx-auto shadow-sm">
+                                <i class="bi bi-tag-fill fs-5 text-primary"></i>
+                            </div>
+                            <small class="text-dark fw-bold d-block">@cat.CategoryName</small>
                         </div>
-                    }
-                    else
-                    {
-                        <button onclick="addToCart(@item.ProductId)" class="btn btn-primary w-100 rounded-pill">🛒 Add to Cart</button>
-                    }
+                    </a>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Expanded Products Section -->
+<div class="mb-5">
+    <h3 class="fw-bold mb-4">Handpicked for You</h3>
+    <div class="row g-4">
+        @if (Model != null)
+        {
+            @foreach (var item in Model)
+            {
+                <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                    <div class="card h-100 border-0 shadow-sm product-compact-card rounded-4 overflow-hidden">
+                        <div class="position-relative bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                            <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? $"https://via.placeholder.com/200x200?text={item.Name}" : item.ImageUrl)" 
+                                 class="card-img-top p-2 rounded-4 h-100 w-100 object-fit-contain" 
+                                 alt="@item.Name"
+                                 onerror="handleImageError(this)">
+                            <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="stretched-link"></a>
+                        </div>
+                        <div class="card-body d-flex flex-column p-3">
+                            <h6 class="card-title fw-bold text-truncate mb-1">@item.Name</h6>
+                            <p class="text-muted extra-small mb-2 text-truncate">@item.CategoryName</p>
+                            <div class="mt-auto d-flex align-items-center justify-content-between">
+                                <span class="fw-bold text-primary small">₹@item.Price.ToString("N2", indianCulture)</span>
+                                @{
+                                    var cartItems = ViewData["UserCart"] as IEnumerable<ShoppingApp.Models.Cart>;
+                                    var cartItem = cartItems?.FirstOrDefault(c => c.ProductId == item.ProductId);
+                                }
+                                
+                                @if (cartItem != null)
+                                {
+                                    <div class="input-group input-group-sm w-auto shadow-sm rounded border overflow-hidden">
+                                        <button onclick="updateCart(@item.ProductId, -1, this)" class="btn btn-light btn-sm border-0 px-1">
+                                            <i class="bi bi-dash"></i>
+                                        </button>
+                                        <span class="input-group-text bg-white border-0 fw-bold px-2 py-0 cart-quantity" style="font-size: 0.8rem;">@cartItem.Quantity</span>
+                                        <button onclick="updateCart(@item.ProductId, 1, this)" class="btn btn-light btn-sm border-0 px-1">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button onclick="updateCart(@item.ProductId, 1, this)" class="btn btn-primary btn-sm rounded-3 px-2 py-0 z-index-10 position-relative">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- "Adding More" Section -->
+<div class="bg-primary-subtle rounded-5 p-5 text-center mb-5 border border-primary-subtle shadow-sm">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="mb-3 text-primary">
+                <i class="bi bi-stars display-4"></i>
+            </div>
+            <h3 class="fw-bold mb-3">Don't see what you're looking for?</h3>
+            <p class="lead text-secondary mb-4">We're constantly expanding! Our curators are currently adding hundreds of new items based on your requests. Check back tomorrow for even more of your favorite brands.</p>
+            <div class="d-flex justify-content-center gap-2">
+                <span class="badge bg-white text-primary border border-primary-subtle px-3 py-2 rounded-pill shadow-sm">100+ New Arrivals Daily</span>
+                <span class="badge bg-white text-primary border border-primary-subtle px-3 py-2 rounded-pill shadow-sm">Fresh Stock Every Morning</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trust Section -->
+<div class="bg-white rounded-5 p-4 shadow-sm mb-5 border border-light">
+    <div class="row g-4">
+        <div class="col-md-4 text-center">
+            <div class="d-flex align-items-center justify-content-center gap-3">
+                <i class="bi bi-lightning-charge-fill text-warning fs-1"></i>
+                <div class="text-start">
+                    <h6 class="fw-bold mb-0">Superfast Delivery</h6>
+                    <small class="text-muted">Doorstep in 10-15 mins</small>
                 </div>
             </div>
         </div>
-    }
+        <div class="col-md-4 text-center border-start border-end">
+            <div class="d-flex align-items-center justify-content-center gap-3">
+                <i class="bi bi-shield-check text-success fs-1"></i>
+                <div class="text-start">
+                    <h6 class="fw-bold mb-0">Quality Assured</h6>
+                    <small class="text-muted">Direct from best brands</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="d-flex align-items-center justify-content-center gap-3">
+                <i class="bi bi-wallet2 text-primary fs-1"></i>
+                <div class="text-start">
+                    <h6 class="fw-bold mb-0">Best Value</h6>
+                    <small class="text-muted">Prices lower than local stores</small>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-@section Scripts {
-    <script>
-        async function addToCart(productId) {
-            const response = await fetch(`/Carts/AddToCart?productId=${productId}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                renderCartControls(productId, data.newQuantity);
-            } else if (data.redirect) {
-                window.location.href = data.redirect;
-            }
-        }
-
-        async function updateCart(productId, change) {
-            const response = await fetch(`/Carts/UpdateQuantity?productId=${productId}&change=${change}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                if (data.newQuantity > 0) {
-                    document.getElementById(`qty-${productId}`).innerText = data.newQuantity;
-                } else {
-                    renderAddToCartButton(productId);
-                }
-            }
-        }
-
-        function renderCartControls(productId, quantity) {
-            const container = document.getElementById(`cart-controls-${productId}`);
-            container.innerHTML = `
-                <div class="input-group">
-                    <button onclick="updateCart(${productId}, -1)" class="btn btn-outline-secondary btn-sm rounded-left">-</button>
-                    <span class="form-control text-center font-weight-bold py-1" id="qty-${productId}">${quantity}</span>
-                    <button onclick="updateCart(${productId}, 1)" class="btn btn-outline-secondary btn-sm rounded-right">+</button>
-                </div>
-            `;
-        }
-
-        function renderAddToCartButton(productId) {
-            const container = document.getElementById(`cart-controls-${productId}`);
-            container.innerHTML = `
-                <button onclick="addToCart(${productId})" class="btn btn-primary w-100 rounded-pill">🛒 Add to Cart</button>
-            `;
-        }
-    </script>
-}
-
 <style>
-    .transition-hover {
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    .text-primary-gradient {
+        background: linear-gradient(90deg, #ff8a00, #e52e71);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
-    .transition-hover:hover {
+    
+    .category-card-compact:hover {
+        background: #f8f9fa;
+        transform: translateY(-3px);
+    }
+    .category-icon-small {
+        width: 48px;
+        height: 48px;
+        background: #fff;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .product-compact-card {
+        transition: all 0.2s;
+    }
+    .product-compact-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.1) !important;
     }
+    
+    .extra-small { font-size: 0.75rem; }
+    .z-index-10 { z-index: 10; }
+    
+    .hero-shapes .shape {
+        position: absolute;
+        background: rgba(255,255,255,0.05);
+        border-radius: 50%;
+    }
+    .shape-1 { width: 300px; height: 300px; top: -100px; right: -50px; }
+    .shape-2 { width: 200px; height: 200px; bottom: -50px; left: -50px; }
 </style>

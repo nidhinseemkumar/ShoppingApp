@@ -1,54 +1,96 @@
-﻿@model ShoppingApp.Models.User
+@model ShoppingApp.Models.User
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Profile";
 }
 
-<h1>Edit</h1>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
+                <div class="card-header bg-primary py-4 text-center">
+                    <h3 class="text-white fw-bold mb-0">Edit Your Profile</h3>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4 p-3 bg-danger-subtle rounded-3 small"></div>
+                        <input type="hidden" asp-for="UserId" />
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FirstName" class="form-label text-muted small fw-bold text-uppercase letter-spacing-1">First Name</label>
+                                <input asp-for="FirstName" class="form-control rounded-pill px-3 border-light-subtle bg-light shadow-none" oninput="validateInput(this)" placeholder="Enter first name" />
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                                <small id="FirstNameWarning" class="text-danger extra-small" style="display:none;">Only alphabets are allowed.</small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="LastName" class="form-label text-muted small fw-bold text-uppercase letter-spacing-1">Last Name</label>
+                                <input asp-for="LastName" class="form-control rounded-pill px-3 border-light-subtle bg-light shadow-none" oninput="validateInput(this)" placeholder="Enter last name" />
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                                <small id="LastNameWarning" class="text-danger extra-small" style="display:none;">Only alphabets are allowed.</small>
+                            </div>
+                        </div>
 
-<h4>User</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="UserId" />
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label text-muted small fw-bold text-uppercase letter-spacing-1">Email Address (Read Only)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0 rounded-start-pill"><i class="bi bi-envelope text-muted"></i></span>
+                                <input asp-for="Email" class="form-control rounded-end-pill bg-light-subtle border-0 px-3 shadow-none opacity-75" readonly />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Phone" class="form-label text-muted small fw-bold text-uppercase letter-spacing-1">Phone Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0 rounded-start-pill"><i class="bi bi-phone text-muted"></i></span>
+                                <input asp-for="Phone" class="form-control rounded-end-pill px-3 border-light-subtle bg-light shadow-none" 
+                                       maxlength="10" placeholder="e.g. 9876543210" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                            </div>
+                            <span asp-validation-for="Phone" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Address" class="form-label text-muted small fw-bold text-uppercase letter-spacing-1">Shipping Address</label>
+                            <textarea asp-for="Address" class="form-control rounded-4 px-3 border-light-subtle bg-light shadow-none" rows="3" placeholder="Enter your full shipping address"></textarea>
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold shadow">
+                                <i class="bi bi-check2-circle me-2"></i>Save Changes
+                            </button>
+                            <a asp-action="Profile" class="btn btn-link text-decoration-none text-muted small mt-2">Cancel and Go Back</a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Password" class="control-label"></label>
-                <input asp-for="Password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Phone" class="control-label"></label>
-                <input asp-for="Phone" class="form-control" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Address" class="control-label"></label>
-                <input asp-for="Address" class="form-control" />
-                <span asp-validation-for="Address" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function validateInput(input) {
+            const warningId = input.id + "Warning";
+            const warningElement = document.getElementById(warningId);
+            const regex = /[^a-zA-Z]/g;
+            
+            if (regex.test(input.value)) {
+                warningElement.style.display = "block";
+                input.value = input.value.replace(regex, '');
+            } else {
+                warningElement.style.display = "none";
+            }
+        }
+    </script>
 }
+
+<style>
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .extra-small { font-size: 0.7rem; }
+    .bg-light-subtle { background-color: #f1f3f5; }
+    .shadow-none:focus { border-color: #0d6efd; background-color: #fff; }
+</style>

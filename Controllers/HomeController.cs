@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using ShoppingApp.Models;
-using ShoppingApp.Services;
-using System.Security.Claims;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Security.Claims;
+using ShoppingApp.Services;
 
 namespace ShoppingApp.Controllers
 {
@@ -17,21 +18,23 @@ namespace ShoppingApp.Controllers
             _cartService = cartService;
         }
 
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, NoStore = false)]
         public async Task<IActionResult> Index()
         {
-            var products = await _productService.GetAllProductsAsync();
+            var productsResponse = await _productService.GetAllProductsAsync();
+            var categories = await _productService.GetCategoriesAsync();
             
-            if (User.Identity.IsAuthenticated)
+            var userCart = new List<Cart>();
+            var userIdStr = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
             {
-                var userIdStr = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-                if (int.TryParse(userIdStr, out int userId))
-                {
-                    var cartItems = await _cartService.GetCartItemsAsync(userId);
-                    ViewBag.CartItems = cartItems.ToDictionary(c => c.ProductId.Value, c => c.Quantity.Value);
-                }
+                var cartItems = await _cartService.GetCartItemsAsync(userId);
+                userCart = cartItems.ToList();
             }
-            
-            return View(products);
+
+            ViewData["Categories"] = categories;
+            ViewData["UserCart"] = userCart;
+            return View(productsResponse.Data?.Take(12));
         }
 
         public IActionResult Privacy()
@@ -40,9 +43,25 @@ namespace ShoppingApp.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [Route("Home/Error/{statusCode?}")]
+        public IActionResult Error(int? statusCode)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var requestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            
+            if (statusCode == 404)
+            {
+                ViewData["ErrorMessage"] = "Oops! The page you're looking for doesn't exist.";
+            }
+            else if (statusCode == 403)
+            {
+                ViewData["ErrorMessage"] = "You don't have permission to access this resource.";
+            }
+            else
+            {
+                ViewData["ErrorMessage"] = "Something went wrong on our end. We're working on it!";
+            }
+
+            return View(new ErrorViewModel { RequestId = requestId });
         }
     }
 }

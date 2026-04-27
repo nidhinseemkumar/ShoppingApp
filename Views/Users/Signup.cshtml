@@ -1,4 +1,4 @@
-@model ShoppingApp.Models.User
+@model ShoppingApp.DTOs.UserRegisterDto
 
 @{
     ViewData["Title"] = "Sign Up";
@@ -13,25 +13,32 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label asp-for="Name" class="form-label"></label>
-                            <input asp-for="Name" class="form-control" placeholder="Enter your full name" required />
-                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <label asp-for="FirstName" class="form-label">First Name</label>
+                            <input asp-for="FirstName" class="form-control" placeholder="John" required oninput="validateInput(this)" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                            <small id="FirstNameWarning" class="text-danger" style="display:none;">Only alphabets are allowed.</small>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" type="email" class="form-control" placeholder="example@mail.com" required />
-                            <span asp-validation-for="Email" class="text-danger"></span>
+                            <label asp-for="LastName" class="form-label">Last Name</label>
+                            <input asp-for="LastName" class="form-control" placeholder="Doe" required oninput="validateInput(this)" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                            <small id="LastNameWarning" class="text-danger" style="display:none;">Only alphabets are allowed.</small>
                         </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" type="email" class="form-control" placeholder="example@mail.com" required />
+                        <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="Password" class="form-label"></label>
-                            <input asp-for="Password" type="password" class="form-control" placeholder="Create a password" required />
+                            <input asp-for="Password" type="password" class="form-control" placeholder="Create a password" required autocomplete="new-password" spellcheck="false" />
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label asp-for="Phone" class="form-label"></label>
-                            <input asp-for="Phone" class="form-control" placeholder="Optional" />
+                            <input asp-for="Phone" class="form-control" placeholder="10-digit number" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
                             <span asp-validation-for="Phone" class="text-danger"></span>
                         </div>
                     </div>
@@ -54,4 +61,18 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function validateInput(input) {
+            const warningId = input.id + "Warning";
+            const warningElement = document.getElementById(warningId);
+            const regex = /[^a-zA-Z]/g;
+            
+            if (regex.test(input.value)) {
+                warningElement.style.display = "block";
+                input.value = input.value.replace(regex, '');
+            } else {
+                warningElement.style.display = "none";
+            }
+        }
+    </script>
 }

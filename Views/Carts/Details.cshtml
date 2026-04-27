@@ -1,4 +1,4 @@
-﻿@model ShoppingApp.Models.Cart
+@model ShoppingApp.Models.Cart
 
 @{
     ViewData["Title"] = "Details";
@@ -20,13 +20,13 @@
             @Html.DisplayNameFor(model => model.Product)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Product.ProductId)
+            @Html.DisplayFor(model => model.Product!.ProductId)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.User)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.User.UserId)
+            @Html.DisplayFor(model => model.User!.UserId)
         </dd>
     </dl>
 </div>

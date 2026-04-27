@@ -1,25 +1,46 @@
-﻿@model ErrorViewModel
+@model ErrorViewModel
 @{
     ViewData["Title"] = "Error";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
-
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+<div class="text-center py-5">
+    <div class="mb-4">
+        <span class="display-1 text-danger">⚠️</span>
+    </div>
+    
+    <h1 class="display-4 font-weight-bold text-dark">Something Went Wrong</h1>
+    <p class="lead text-muted mb-5">
+        @(ViewData["ErrorMessage"] ?? "An error occurred while processing your request. Please try again later.")
     </p>
-}
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+    @if (Model.ShowRequestId)
+    {
+        <div class="bg-light p-3 rounded d-inline-block mb-4 border">
+            <small class="text-secondary">Request ID: <code class="text-primary">@Model.RequestId</code></small>
+        </div>
+    }
+
+    <div class="mt-4">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
+            Back to Home
+        </a>
+    </div>
+</div>
+
+@if (Context.RequestServices.GetService<IWebHostEnvironment>()?.IsDevelopment() == true)
+{
+    <div class="card mt-5 border-warning shadow-sm">
+        <div class="card-header bg-warning text-dark font-weight-bold">
+            Development Mode Information
+        </div>
+        <div class="card-body">
+            <p>
+                Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
+            </p>
+            <p>
+                <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
+                It can result in displaying sensitive information from exceptions to end users.
+            </p>
+        </div>
+    </div>
+}
