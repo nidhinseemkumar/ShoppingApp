@@ -145,6 +145,15 @@ namespace ShoppingApp.Models
                 entity.HasIndex(e => new { e.ProductId, e.UserId }).IsUnique();
             });
 
+            modelBuilder.Entity<ProductImage>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ImageUrl).IsRequired();
+                entity.HasOne(d => d.Product).WithMany(p => p.Images)
+                    .HasForeignKey(d => d.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
             OnModelCreatingPartial(modelBuilder);
         }
 

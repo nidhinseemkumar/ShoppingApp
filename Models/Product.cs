@@ -25,5 +25,6 @@ namespace ShoppingApp.Models
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
+        public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
     }
 }
