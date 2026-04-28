@@ -1,0 +1,233 @@
+@using System.Globalization
+@model IEnumerable<ShoppingApp.Models.Order>
+
+@{
+    ViewData["Title"] = "Order Management";
+    Layout = "_AdminLayout";
+    var indianCulture = new CultureInfo("en-IN");
+}
+
+<div class="row mb-4 align-items-center">
+    @Html.AntiForgeryToken()
+    <div class="col-md-6">
+        <p class="text-muted mb-0">Total Orders: <span class="fw-bold text-dark">@Model.Count()</span></p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+            <a asp-controller="Files" asp-action="ExportOrders" class="btn btn-white border-end px-3">
+                <i class="bi bi-download me-1"></i> Export
+            </a>
+            <button type="button" class="btn btn-white px-3" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Print
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-5">
+    <div class="card-header bg-white py-3 px-4 border-bottom rounded-top-5">
+        <form asp-action="Orders" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="searchTerm" class="form-control bg-light border-0 py-2" placeholder="ID, Customer, Product..." value="@ViewBag.CurrentSearch">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Status</label>
+                    <select name="status" class="form-select bg-light border-0 py-2">
+                        <option value="">All Status</option>
+                        <option value="Pending" selected="@(ViewBag.CurrentStatus == "Pending")">Pending</option>
+                        <option value="Processing" selected="@(ViewBag.CurrentStatus == "Processing")">Processing</option>
+                        <option value="Shipped" selected="@(ViewBag.CurrentStatus == "Shipped")">Shipped</option>
+                        <option value="Delivered" selected="@(ViewBag.CurrentStatus == "Delivered")">Delivered</option>
+                        <option value="Cancelled" selected="@(ViewBag.CurrentStatus == "Cancelled")">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted text-uppercase fw-bold">From</label>
+                    <input type="date" name="startDate" class="form-control bg-light border-0 py-2" value="@ViewBag.StartDate">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted text-uppercase fw-bold">To</label>
+                    <input type="date" name="endDate" class="form-control bg-light border-0 py-2" value="@ViewBag.EndDate">
+                </div>
+                <div class="col-md-3 text-end">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 me-2">Apply Filters</button>
+                    <a asp-action="Orders" class="btn btn-light rounded-pill px-3">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="ordersTable">
+            <thead class="bg-light">
+                <tr class="text-muted small text-uppercase fw-bold">
+                    <th class="ps-4">Order Info</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model)
+                {
+                    <tr>
+                        <td class="ps-4">
+                            <div>
+                                <h6 class="fw-bold mb-0">#@order.OrderId</h6>
+                                <span class="text-muted extra-small d-block text-truncate" style="max-width: 150px;">
+                                    @string.Join(", ", order.OrderItems.Select(oi => oi.Product?.Name).Where(n => n != null))
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary-subtle text-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: 700; font-size: 0.8rem;">
+                                    @(order.User?.FirstName?[0] ?? 'U')
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 small fw-bold">@order.User?.FirstName @order.User?.LastName</h6>
+                                    <span class="text-muted extra-small">@order.User?.Email</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">
+                                <div>@(order.OrderDate?.ToString("MMM dd, yyyy") ?? "N/A")</div>
+                                <div class="text-muted extra-small">@(order.OrderDate?.ToString("hh:mm tt") ?? "")</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-dark">₹@((order.TotalAmount ?? 0).ToString("N2", indianCulture))</span>
+                        </td>
+                        <td>
+                            @{
+                                var statusClass = order.Status switch
+                                {
+                                    "Pending" => "badge-soft-warning",
+                                    "Processing" => "badge-soft-info",
+                                    "Shipped" => "badge-soft-primary",
+                                    "Delivered" => "badge-soft-success",
+                                    "Cancelled" => "badge-soft-danger",
+                                    _ => "badge-soft-secondary"
+                                };
+                            }
+                            <span class="badge @statusClass rounded-pill px-3">@order.Status</span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm rounded-circle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end rounded-4 border-0 shadow-lg p-2 mt-2">
+                                    <li><a class="dropdown-item py-2" asp-action="OrderDetails" asp-route-id="@order.OrderId"><i class="bi bi-eye me-2"></i>View Details</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header small text-uppercase opacity-50">Update Status</h6></li>
+                                    <li><a class="dropdown-item py-2" href="#" onclick="updateStatus(@order.OrderId, 'Pending')">Mark as Pending</a></li>
+                                    <li><a class="dropdown-item py-2" href="#" onclick="updateStatus(@order.OrderId, 'Processing')">Mark as Processing</a></li>
+                                    <li><a class="dropdown-item py-2" href="#" onclick="updateStatus(@order.OrderId, 'Shipped')">Mark as Shipped</a></li>
+                                    <li><a class="dropdown-item py-2 text-success" href="#" onclick="updateStatus(@order.OrderId, 'Delivered')">Mark as Delivered</a></li>
+                                    <li><a class="dropdown-item py-2 text-danger" href="#" onclick="updateStatus(@order.OrderId, 'Cancelled')">Cancel Order</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white py-3 px-4 border-top rounded-bottom-5">
+        <span class="text-muted small">Showing @Model.Count() entries</span>
+    </div>
+</div>
+
+<style>
+    .extra-small { font-size: 0.75rem; }
+    .badge-soft-secondary { background-color: #f3f4f6; color: #4b5563; }
+    .badge-soft-info { background-color: #e0f2fe; color: #0284c7; }
+    .badge-soft-warning { background-color: #fef3c7; color: #d97706; }
+    .badge-soft-primary { background-color: #dbeafe; color: #2563eb; }
+    .badge-soft-success { background-color: #d1fae5; color: #059669; }
+    .badge-soft-danger { background-color: #fee2e2; color: #dc2626; }
+    
+    /* Fix for dropdown clipping */
+    .table-responsive {
+        overflow: visible !important;
+    }
+    
+    @@media (max-width: 991.98) {
+        .table-responsive {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    .dropdown-menu {
+        z-index: 1060 !important;
+        margin-top: 5px !important;
+    }
+
+    tr:hover {
+        z-index: 5;
+        position: relative;
+    }
+
+    @@media print {
+        .btn, .card-header, .card-footer, .dropdown, .navbar, .sidebar, .btn-group {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .table {
+            width: 100% !important;
+        }
+        .text-end.pe-4 {
+            display: none !important;
+        }
+        th:last-child, td:last-child {
+            display: none !important;
+        }
+        body {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        async function updateStatus(orderId, status) {
+            if (!confirm(`Are you sure you want to mark order #${orderId} as ${status}?`)) return;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            try {
+                const response = await fetch(`/Admin/UpdateOrderStatus`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    },
+                    body: `orderId=${orderId}&status=${status}`
+                });
+
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    alert(`Failed to update status: ${data.error || response.statusText || 'Unknown error'}`);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error updating status');
+            }
+        }
+    </script>
+}

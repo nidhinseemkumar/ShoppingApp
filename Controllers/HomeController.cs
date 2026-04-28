@@ -18,7 +18,6 @@ namespace ShoppingApp.Controllers
             _cartService = cartService;
         }
 
-        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, NoStore = false)]
         public async Task<IActionResult> Index()
         {
             var productsResponse = await _productService.GetAllProductsAsync();
@@ -32,9 +31,15 @@ namespace ShoppingApp.Controllers
                 userCart = cartItems.ToList();
             }
 
+            var products = productsResponse.Data;
+            if (User.IsInRole("Customer"))
+            {
+                products = products?.Where(p => p.Stock > 0).ToList();
+            }
+
             ViewData["Categories"] = categories;
             ViewData["UserCart"] = userCart;
-            return View(productsResponse.Data?.Take(12));
+            return View(products?.Take(12));
         }
 
         public IActionResult Privacy()

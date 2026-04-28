@@ -8,18 +8,12 @@ using ShoppingApp.Models;
 
 namespace ShoppingApp.Repositories
 {
-    public class GenericRepository<T> : IGenericRepository<T> where T : class
+    public class GenericRepository<T>(ShoppingDbContext context) : IGenericRepository<T> where T : class
     {
-        protected readonly ShoppingDbContext _context;
-        protected readonly DbSet<T> _dbSet;
+        protected readonly ShoppingDbContext _context = context;
+        protected readonly DbSet<T> _dbSet = context.Set<T>();
 
-        public GenericRepository(ShoppingDbContext context)
-        {
-            _context = context;
-            _dbSet = _context.Set<T>();
-        }
-
-        public async Task<T> GetByIdAsync(int id)
+        public async Task<T?> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
         }

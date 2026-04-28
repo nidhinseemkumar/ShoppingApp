@@ -1,5 +1,7 @@
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using ShoppingApp.Models;
+using ShoppingApp.Mappings;
 using ShoppingApp.Services;
 using ShoppingApp.Repositories;
 using ShoppingApp.Middlewares;
@@ -32,7 +34,9 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 // AutoMapper
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(cfg => {
+    cfg.AddProfile<MappingProfile>();
+});
 
 // Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -42,6 +46,7 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 // Authentication
 builder.Services.AddAuthentication(options => {

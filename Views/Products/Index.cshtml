@@ -3,7 +3,8 @@
 
 @{
     ViewData["Title"] = "Our Products";
-    var indianCulture = new CultureInfo("en-IN");
+    CultureInfo indianCulture = new CultureInfo("en-IN");
+    var products = Model ?? Enumerable.Empty<ShoppingApp.DTOs.ProductDto>();
 }
 
 <div class="container py-5">
@@ -37,7 +38,7 @@
     </div>
 
     <div class="row g-4">
-        @foreach (var item in Model)
+        @foreach (var item in products)
         {
             <div class="col-sm-6 col-lg-4 col-xl-3">
                 <div class="card h-100 border-0 shadow-sm product-card transition-all rounded-4 overflow-hidden">
@@ -118,16 +119,19 @@
                                     }
                                 </div>
                                 
-                                <div class="d-flex align-items-center justify-content-between mb-3">
-                                    @if (item.Stock > 0)
-                                    {
-                                        <span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i>In Stock</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-danger small"><i class="bi bi-x-circle-fill me-1"></i>Out of Stock</span>
-                                    }
-                                </div>
+                                @if (!User.IsInRole("Customer"))
+                                {
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        @if (item.Stock > 0)
+                                        {
+                                            <span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i>In Stock</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger small"><i class="bi bi-x-circle-fill me-1"></i>Out of Stock</span>
+                                        }
+                                    </div>
+                                }
                                 
                                 <div class="d-grid gap-2">
                                     <a asp-controller="Carts" asp-action="BuyNow" asp-route-productId="@item.ProductId" 

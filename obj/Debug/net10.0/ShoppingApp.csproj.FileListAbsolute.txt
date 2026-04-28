@@ -697,7 +697,14 @@ C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\ne
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\Azure.Core.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\Azure.Identity.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\BCrypt.Net-Next.dll
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\ClosedXML.dll
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\ClosedXML.Parser.dll
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\CsvHelper.dll
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\DocumentFormat.OpenXml.dll
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\DocumentFormat.OpenXml.Framework.dll
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\ExcelNumberFormat.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\Humanizer.dll
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\Microsoft.AspNetCore.JsonPatch.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\Microsoft.Bcl.AsyncInterfaces.dll
@@ -736,6 +743,8 @@ C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\ne
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\NuGet.Packaging.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\NuGet.Protocol.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\NuGet.Versioning.dll
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\RBush.dll
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\SixLabors.Fonts.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll
@@ -748,6 +757,7 @@ C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\ne
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\System.Composition.TypedParts.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\System.Configuration.ConfigurationManager.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\System.IO.Packaging.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\System.Memory.Data.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\System.Security.Cryptography.ProtectedData.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\cs\Microsoft.CodeAnalysis.resources.dll
@@ -850,8 +860,18 @@ C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\ne
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\scopedcss\bundle\ShoppingApp.styles.css
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\scopedcss\projectbundle\ShoppingApp.bundle.scp.css
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\kbefetixz1-{0}-4wjgbzlcxp-4wjgbzlcxp.gz
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\uwplipcqvl-{0}-4db2cyy2um-4db2cyy2um.gz
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\we7c23ug0n-{0}-egz2z2xtbp-egz2z2xtbp.gz
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\axcd5ovkgs-{0}-2ocwjn5i68-2ocwjn5i68.gz
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\5lw9tgog61-{0}-kvzcvj8noi-kvzcvj8noi.gz
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\audhsfr223-{0}-oswj25jqq7-oswj25jqq7.gz
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\znwbsc9a6d-{0}-vbj4stncgb-vbj4stncgb.gz
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\3yjcqa3zjb-{0}-iz38tysah4-iz38tysah4.gz
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\acmw1j5wom-{0}-e1brf00h0p-e1brf00h0p.gz
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\3clmqezf9b-{0}-b9sayid5wm-b9sayid5wm.gz
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\hgbatay5nb-{0}-61n19gt1b8-61n19gt1b8.gz
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\r33ojipjsw-{0}-dotfy8i7kz-dotfy8i7kz.gz
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\2v4i296hi2-{0}-bqjiyaj88i-bqjiyaj88i.gz
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\b9k35ly2s7-{0}-c2jlpeoesf-c2jlpeoesf.gz
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\db9j4jab84-{0}-erw9l3u2r3-erw9l3u2r3.gz
@@ -925,5 +945,3 @@ C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\ne
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\ShoppingApp.pdb
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\ShoppingApp.genruntimeconfig.cache
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\ref\ShoppingApp.dll
-C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
-C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\compressed\r33ojipjsw-{0}-dotfy8i7kz-dotfy8i7kz.gz

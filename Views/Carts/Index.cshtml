@@ -4,8 +4,8 @@
 
 @{
     ViewData["Title"] = "Your Shopping Cart";
-    decimal total = Model.Sum(item => (item.Product?.Price ?? 0) * (item.Quantity ?? 0));
-    var indianCulture = new CultureInfo("en-IN");
+    decimal total = Model.Sum(item => (item.Product?.Price ?? 0m) * (item.Quantity ?? 0));
+    CultureInfo indianCulture = new CultureInfo("en-IN");
 }
 
 <div class="container py-5">
@@ -51,7 +51,7 @@
                             <tbody>
                                 @foreach (var item in Model)
                                 {
-                                    var itemSubtotal = (item.Product?.Price ?? 0) * (item.Quantity ?? 0);
+                                    decimal itemSubtotal = (item.Product?.Price ?? 0m) * (item.Quantity ?? 0);
                                     <tr>
                                         <td class="px-4 py-4">
                                             <div class="d-flex align-items-center">
@@ -78,8 +78,8 @@
                                                 </button>
                                             </div>
                                         </td>
-                                        <td class="text-end fw-semibold">₹@((item.Product?.Price ?? 0).ToString("N2", indianCulture))</td>
-                                        <td class="text-end px-4 fw-bold text-primary">₹@(itemSubtotal.ToString("N2", indianCulture))</td>
+                                        <td class="text-end fw-semibold">₹@((item.Product?.Price ?? 0m).ToString("N2", indianCulture))</td>
+                                        <td class="text-end px-4 fw-bold text-primary">₹@itemSubtotal.ToString("N2", indianCulture)</td>
                                         <td class="text-end pe-4">
                                             <div class="d-flex gap-2 justify-content-end">
                                                 <a asp-action="BuyNow" asp-route-productId="@item.ProductId" class="btn btn-sm btn-outline-success rounded-pill px-3">Buy Now</a>

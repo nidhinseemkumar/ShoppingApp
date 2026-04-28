@@ -27,6 +27,8 @@ namespace ShoppingApp.Models
 
         public virtual DbSet<Product> Products { get; set; }
 
+        public virtual DbSet<Review> Reviews { get; set; }
+
         public virtual DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -58,7 +60,7 @@ namespace ShoppingApp.Models
                 entity.HasKey(e => e.OrderId);
                 entity.Property(e => e.OrderId).HasColumnName("Id");
                 entity.Property(e => e.OrderDate).HasColumnType("datetime");
-                entity.Ignore(e => e.Status);
+                entity.Property(e => e.Status).HasMaxLength(50).IsUnicode(false);
                 entity.Property(e => e.TotalAmount).HasColumnType("decimal(10, 2)");
                 entity.Property(e => e.UserId).HasColumnName("UserID");
 
@@ -120,6 +122,27 @@ namespace ShoppingApp.Models
                 entity.Property(e => e.Phone).HasColumnName("PhoneNumber").HasMaxLength(15).IsUnicode(false);
                 entity.Ignore(e => e.Name);
                 entity.Property(e => e.Role).HasMaxLength(50).IsUnicode(false).HasDefaultValue("Customer");
+            });
+
+            modelBuilder.Entity<Review>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.ToTable("Reviews");
+                entity.Property(e => e.Rating).IsRequired();
+                entity.Property(e => e.Comment).HasMaxLength(1000);
+                entity.Property(e => e.CreatedAt).HasColumnType("datetime").HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Product).WithMany(p => p.Reviews)
+                    .HasForeignKey(d => d.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.User).WithMany(p => p.Reviews)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Ensure a user can only review a product once
+                entity.HasIndex(e => new { e.ProductId, e.UserId }).IsUnique();
             });
 
             OnModelCreatingPartial(modelBuilder);

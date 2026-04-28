@@ -10,47 +10,51 @@ using System.Security.Claims;
 
 namespace ShoppingApp.Controllers
 {
-    public class ProductsController : Controller
+    public class ProductsController(IProductService productService, ICartService cartService) : Controller
     {
-        private readonly IProductService _productService;
-        private readonly ICartService _cartService;
+        private readonly IProductService _productService = productService;
+        private readonly ICartService _cartService = cartService;
 
-        public ProductsController(IProductService productService, ICartService cartService)
-        {
-            _productService = productService;
-            _cartService = cartService;
-        }
 
         public async Task<IActionResult> Index(string? searchTerm, string? category)
         {
             var response = await _productService.GetAllProductsAsync(searchTerm, category);
             
-            var userCart = new List<Cart>();
-            var userIdStr = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            List<Cart> userCart = [];
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdStr, out int userId))
             {
                 var cartItems = await _cartService.GetCartItemsAsync(userId);
                 userCart = cartItems.ToList();
             }
 
+            var products = response.Data;
+            if (User.IsInRole("Customer"))
+            {
+                products = products?.Where(p => p.Stock > 0).ToList();
+            }
+
             ViewData["CurrentSearch"] = searchTerm;
             ViewData["CurrentCategory"] = category;
             ViewData["UserCart"] = userCart;
             
-            return View(response.Data);
+            return View(products);
         }
 
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
-            var response = await _productService.GetProductByIdAsync(id.Value);
-            if (!response.Success) return NotFound();
+            
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int? currentUserId = int.TryParse(userIdStr, out int userId) ? userId : null;
 
-            var userCart = new List<Cart>();
-            var userIdStr = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out int userId))
+            var response = await _productService.GetProductByIdAsync(id.Value, currentUserId);
+            if (!response.Success || response.Data == null) return NotFound();
+
+            List<Cart> userCart = [];
+            if (currentUserId.HasValue)
             {
-                var cartItems = await _cartService.GetCartItemsAsync(userId);
+                var cartItems = await _cartService.GetCartItemsAsync(currentUserId.Value);
                 userCart = cartItems.ToList();
             }
             ViewData["UserCart"] = userCart;
@@ -75,15 +79,26 @@ namespace ShoppingApp.Controllers
                 ModelState.AddModelError("categoryName", "Category is required");
             }
 
+            // Server-side check for duplicate Name globally
+            var existingProducts = await _productService.GetAllProductsAsync();
+            if (existingProducts.Data != null && existingProducts.Data.Any(p => 
+                p.Name?.Trim().Equals(product.Name?.Trim(), StringComparison.OrdinalIgnoreCase) == true))
+            {
+                ModelState.AddModelError("", "Rejected: A product with this name already exists in the database.");
+                TempData["ErrorMessage"] = "Duplicate Detected: Product name already exists globally.";
+            }
+
             if (ModelState.IsValid)
             {
                 var category = await _productService.GetOrCreateCategoryByNameAsync(categoryName.Trim());
                 product.CategoryId = category.CategoryId;
                 
                 await _productService.CreateProductAsync(product);
+                TempData["SuccessMessage"] = $"Product '{product.Name}' added successfully!";
                 return RedirectToAction("Dashboard", "Admin");
             }
             
+            TempData["ErrorMessage"] = "Failed to add product. Please check the details.";
             var categories = await _productService.GetCategoriesAsync();
             ViewBag.AllCategories = categories;
             return View(product);
@@ -125,7 +140,23 @@ namespace ShoppingApp.Controllers
             return View(product);
         }
 
-        // Add Delete actions similarly...
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+            var product = await _productService.GetProductEntityByIdAsync(id.Value);
+            if (product == null) return NotFound();
+            return View(product);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            await _productService.DeleteProductAsync(id);
+            return RedirectToAction("Dashboard", "Admin");
+        }
 
         [Authorize(Roles = "Admin")]
         [HttpPost]
@@ -134,20 +165,64 @@ namespace ShoppingApp.Controllers
             var success = await _productService.UpdateStockAsync(productId, stock);
             return Json(new { success });
         }
+        
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public async Task<IActionResult> UpdatePrice(int productId, decimal price)
+        {
+            var success = await _productService.UpdatePriceAsync(productId, price);
+            return Json(new { success });
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetSuggestions(string term)
         {
-            if (string.IsNullOrWhiteSpace(term)) return Json(new List<string>());
+            if (string.IsNullOrWhiteSpace(term)) return Json((List<string>)[]);
             
             var productsResponse = await _productService.GetAllProductsAsync(searchTerm: term);
-            var suggestions = productsResponse.Data?
+            var products = productsResponse.Data;
+            if (User.IsInRole("Customer"))
+            {
+                products = products?.Where(p => p.Stock > 0);
+            }
+
+            var suggestions = products?
                 .Select(p => p.Name)
                 .Where(name => name != null)
                 .Take(5)
-                .ToList() ?? new List<string?>();
+                .Select(n => n!)
+                .ToList() ?? new List<string>();
                 
             return Json(suggestions);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CheckDuplicate(string name, string? category)
+        {
+            var response = await _productService.GetAllProductsAsync();
+            var allProducts = response.Data ?? new List<ProductDto>();
+
+            bool isCategoryDuplicate = false;
+            bool isGlobalDuplicate = false;
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                var lowerName = name.ToLower().Trim();
+                
+                // Global check
+                isGlobalDuplicate = allProducts.Any(p => p.Name?.ToLower().Trim() == lowerName);
+
+                // Category specific check
+                if (!string.IsNullOrWhiteSpace(category))
+                {
+                    var lowerCat = category.ToLower().Trim();
+                    isCategoryDuplicate = allProducts.Any(p => 
+                        p.Name?.ToLower().Trim() == lowerName && 
+                        p.CategoryName?.ToLower().Trim() == lowerCat);
+                }
+            }
+
+            return Json(new { isCategoryDuplicate, isGlobalDuplicate });
         }
     }
 }

@@ -1,0 +1,272 @@
+@using System.Globalization
+@model ShoppingApp.Models.Order
+
+@{
+    ViewData["Title"] = "Order Details";
+    Layout = User.IsInRole("Admin") ? "_AdminLayout" : "_Layout";
+    CultureInfo indianCulture = new CultureInfo("en-IN");
+}
+
+<div class="@(User.IsInRole("Admin") ? "" : "container") py-5">
+    <div class="d-flex align-items-center justify-content-between mb-5">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Orders</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Order #@Model.OrderId</li>
+                </ol>
+            </nav>
+            <h1 class="display-4 fw-bold mb-0">Order <span class="text-primary">Details</span></h1>
+            <p class="lead text-muted mt-2">Placed on @Model.OrderDate?.ToString("MMMM dd, yyyy 'at' hh:mm tt")</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-printer me-2"></i>Print Invoice
+            </button>
+            @if (User.IsInRole("Admin")) {
+                <a href="/Admin/Orders" class="btn btn-primary rounded-pill px-4">Back to Dashboard</a>
+            } else {
+                <a asp-action="Index" class="btn btn-primary rounded-pill px-4">Back to Orders</a>
+            }
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Order Status & Summary -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg rounded-5 overflow-hidden mb-4">
+                <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Items in this order</h5>
+                    @{
+                        var statusClass = Model.Status == "Paid" || Model.Status == "Delivered" ? "bg-success text-success" : 
+                                         Model.Status == "Pending" || Model.Status == "Processing" ? "bg-warning text-warning" : 
+                                         Model.Status == "Shipped" || Model.Status == "Completed" ? "bg-info text-info" : "bg-secondary text-secondary";
+                    }
+                    <span class="badge @statusClass bg-opacity-10 border @statusClass border-opacity-25 rounded-pill px-4 py-2">
+                        <i class="bi bi-dot me-1"></i>@Model.Status
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-borderless align-middle mb-0">
+                            <thead class="bg-light-subtle">
+                                <tr>
+                                    <th class="ps-4 py-3 text-muted small text-uppercase">Product</th>
+                                    <th class="py-3 text-center text-muted small text-uppercase">Price</th>
+                                    <th class="py-3 text-center text-muted small text-uppercase">Quantity</th>
+                                    <th class="pe-4 py-3 text-end text-muted small text-uppercase">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.OrderItems)
+                                {
+                                    <tr>
+                                        <td class="ps-4 py-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="product-thumb me-3 rounded-4 bg-light p-2" style="width: 70px; height: 70px;">
+                                                    <img src="@(string.IsNullOrEmpty(item.Product?.ImageUrl) ? $"https://via.placeholder.com/70?text={item.Product?.Name}" : item.Product.ImageUrl)" 
+                                                         class="img-fluid rounded-3 h-100 w-100 object-fit-cover" 
+                                                         alt="@item.Product?.Name"
+                                                         onerror="this.src='https://via.placeholder.com/70?text=Product'">
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">@(item.Product?.Name ?? "Premium Product")</h6>
+                                                    <span class="text-muted small">Category: @(item.Product?.Category?.CategoryName ?? "General")</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center fw-semibold">₹@((item.Price ?? 0m).ToString("N2", indianCulture))</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-light text-dark rounded-pill px-3 py-2 fw-bold">x @item.Quantity</span>
+                                        </td>
+                                        <td class="pe-4 text-end fw-bold text-primary">₹@(((item.Price ?? 0m) * (item.Quantity ?? 0)).ToString("N2", indianCulture))</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="border-top border-light">
+                                <tr>
+                                    <td colspan="3" class="ps-4 py-3 text-end text-muted">Subtotal</td>
+                                    <td class="pe-4 py-3 text-end fw-semibold">₹@((Model.TotalAmount ?? 0m).ToString("N2", indianCulture))</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="ps-4 py-3 text-end text-muted">Shipping</td>
+                                    <td class="pe-4 py-3 text-end fw-semibold text-success">FREE</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="ps-4 py-4 text-end fw-bold fs-5">Total Amount</td>
+                                    <td class="pe-4 py-4 text-end fw-bold fs-5 text-primary">₹@((Model.TotalAmount ?? 0m).ToString("N2", indianCulture))</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
+                <div class="card-header bg-white border-0 p-4">
+                    <h5 class="fw-bold mb-0">Order Timeline</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="timeline">
+                        <!-- Step 1: Placed -->
+                        <div class="timeline-item pb-4 border-start border-2 border-primary ps-4 position-relative">
+                            <div class="timeline-dot bg-primary position-absolute rounded-circle shadow-sm" style="width: 16px; height: 16px; left: -9px; top: 4px; border: 3px solid #fff;"></div>
+                            <h6 class="fw-bold mb-1 text-primary">Order Placed</h6>
+                            <p class="text-muted small mb-0">@Model.OrderDate?.ToString("MMM dd, yyyy 'at' hh:mm tt")</p>
+                            <p class="small text-muted mt-2">Your order has been received and is awaiting processing.</p>
+                        </div>
+
+                        <!-- Step 2: Processing -->
+                        @{
+                            bool isProcessing = Model.Status == "Processing" || Model.Status == "Shipped" || Model.Status == "Delivered" || Model.Status == "Completed";
+                            string processingBorder = isProcessing ? "border-primary" : "border-light";
+                            string processingDot = isProcessing ? "bg-primary" : "bg-light border";
+                            string processingText = isProcessing ? "text-primary" : "text-muted opacity-50";
+                        }
+                        <div class="timeline-item pb-4 border-start border-2 @processingBorder ps-4 position-relative">
+                            <div class="timeline-dot @processingDot position-absolute rounded-circle shadow-sm" style="width: 16px; height: 16px; left: -9px; top: 4px; border: 3px solid #fff;"></div>
+                            <h6 class="fw-bold mb-1 @processingText">Processing</h6>
+                            @if (isProcessing) {
+                                <p class="small text-muted mt-1">We are preparing your items for shipment.</p>
+                            }
+                        </div>
+
+                        <!-- Step 3: Shipped -->
+                        @{
+                            bool isShipped = Model.Status == "Shipped" || Model.Status == "Delivered" || Model.Status == "Completed";
+                            string shippedBorder = isShipped ? "border-primary" : "border-light";
+                            string shippedDot = isShipped ? "bg-primary" : "bg-light border";
+                            string shippedText = isShipped ? "text-primary" : "text-muted opacity-50";
+                        }
+                        <div class="timeline-item pb-4 border-start border-2 @shippedBorder ps-4 position-relative">
+                            <div class="timeline-dot @shippedDot position-absolute rounded-circle shadow-sm" style="width: 16px; height: 16px; left: -9px; top: 4px; border: 3px solid #fff;"></div>
+                            <h6 class="fw-bold mb-1 @shippedText">Shipped</h6>
+                            @if (isShipped) {
+                                <p class="small text-muted mt-1">Your package is on its way to you.</p>
+                            }
+                        </div>
+
+                        <!-- Step 4: Delivered -->
+                        @{
+                            bool isDelivered = Model.Status == "Delivered" || Model.Status == "Completed";
+                            string deliveredDot = isDelivered ? "bg-success" : "bg-light border";
+                            string deliveredText = isDelivered ? "text-success" : "text-muted opacity-50";
+                        }
+                        <div class="timeline-item ps-4 position-relative">
+                            <div class="timeline-dot @deliveredDot position-absolute rounded-circle shadow-sm" style="width: 16px; height: 16px; left: -9px; top: 4px; border: 3px solid #fff;"></div>
+                            <h6 class="fw-bold mb-1 @deliveredText">Delivered</h6>
+                            @if (isDelivered) {
+                                <p class="small text-muted mt-1">Order successfully delivered! Thank you for shopping with us.</p>
+                            }
+                        </div>
+
+                        <!-- Optional: Cancelled Step -->
+                        @if (Model.Status == "Cancelled") {
+                            <div class="timeline-item ps-4 position-relative mt-4">
+                                <div class="timeline-dot bg-danger position-absolute rounded-circle shadow-sm" style="width: 16px; height: 16px; left: -9px; top: 4px; border: 3px solid #fff;"></div>
+                                <h6 class="fw-bold mb-1 text-danger">Cancelled</h6>
+                                <p class="small text-muted mt-1">This order has been cancelled.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-lg rounded-5 overflow-hidden mb-4">
+                <div class="card-header bg-primary text-white border-0 p-4">
+                    <h5 class="fw-bold mb-0">Payment Information</h5>
+                </div>
+                <div class="card-body p-4">
+                    @{
+                        var payment = Model.Payments?.FirstOrDefault();
+                        var payStatusIconBox = payment?.PaymentStatus == "Completed" ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning";
+                        var payStatusIcon = payment?.PaymentStatus == "Completed" ? "bi-check-circle" : "bi-clock-history";
+                        var payStatusText = payment?.PaymentStatus == "Completed" ? "text-success" : "text-warning";
+                    }
+                    @if (payment != null) {
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="icon-box bg-primary-subtle text-primary rounded-circle p-3 me-3">
+                                <i class="bi bi-wallet2 fs-4"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small text-uppercase fw-bold letter-spacing-1">Payment Method</div>
+                                <div class="fw-bold">@payment.PaymentMethod</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="icon-box @payStatusIconBox rounded-circle p-3 me-3">
+                                <i class="bi @payStatusIcon fs-4"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small text-uppercase fw-bold letter-spacing-1">Status</div>
+                                <div class="fw-bold @payStatusText">@payment.PaymentStatus</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box bg-info-subtle text-info rounded-circle p-3 me-3">
+                                <i class="bi bi-calendar-event fs-4"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small text-uppercase fw-bold letter-spacing-1">Date</div>
+                                <div class="fw-bold">@payment.PaymentDate?.ToString("MMM dd, yyyy")</div>
+                            </div>
+                        </div>
+                    } else {
+                        <div class="text-center py-3">
+                            <i class="bi bi-exclamation-circle fs-2 text-muted mb-2 d-block"></i>
+                            <p class="text-muted mb-0">No payment information available.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
+                <div class="card-header bg-white border-0 p-4">
+                    <h5 class="fw-bold mb-0">Shipping Address</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="icon-box bg-light text-muted rounded-circle p-2 me-3">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">@(Model.User?.Name ?? "Customer")</h6>
+                            <p class="text-muted small mb-0">@(Model.User?.Email ?? "No email provided")</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <div class="icon-box bg-light text-muted rounded-circle p-2 me-3">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0 text-muted">
+                                @(Model.User?.Address ?? "No address provided")
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-4">
+                    <p class="small text-muted mb-0"><i class="bi bi-info-circle me-1"></i> Need help with your order? <a href="#" class="text-primary text-decoration-none fw-bold">Contact Support</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .bg-light-subtle { background-color: #f8f9fa; }
+    .product-thumb { border: 1px solid #eee; }
+    .breadcrumb-item + .breadcrumb-item::before { content: "›"; font-size: 1.2rem; line-height: 1; vertical-align: middle; }
+    
+    @@media print {
+        .btn, nav, .card-footer { display: none !important; }
+        .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+        .shadow-lg { box-shadow: none !important; }
+        body { padding: 0; margin: 0; }
+        .container { width: 100% !important; max-width: 100% !important; margin: 0 !important; }
+    }
+</style>

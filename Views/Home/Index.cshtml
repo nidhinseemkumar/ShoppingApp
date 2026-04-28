@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "BuyNext - Your Everyday Super App";
     var categories = ViewData["Categories"] as IEnumerable<ShoppingApp.Models.Category>;
-    var indianCulture = new CultureInfo("en-IN");
+    CultureInfo indianCulture = new CultureInfo("en-IN");
 }
 
 <!-- Premium Hero Section -->
@@ -27,11 +27,27 @@
         {
             @foreach (var cat in categories)
             {
+                var iconClass = cat.CategoryName switch
+                {
+                    "Groceries" or "Grocery" => "bi-basket2-fill",
+                    "Electronics" => "bi-laptop",
+                    "Fashion" or "Clothing" => "bi-watch",
+                    "Home & Kitchen" or "Appliances" => "bi-house-heart-fill",
+                    "Furniture" or "Furnitures" => "bi-door-open",
+                    "Footwear" or "Footwears" or "Shoes" => "bi-shoe-prints",
+                    "Books" => "bi-book-half",
+                    "Beauty" => "bi-magic",
+                    "Toys" => "bi-controller",
+                    "Sports" => "bi-trophy-fill",
+                    "Stationery" => "bi-pencil-square",
+                    _ => "bi-tag-fill"
+                };
+
                 <div class="col-4 col-sm-3 col-md-2">
                     <a asp-controller="Products" asp-action="Index" asp-route-category="@cat.CategoryName" class="text-decoration-none">
                         <div class="category-card-compact text-center p-2 rounded-4 transition-all">
                             <div class="category-icon-small mb-2 mx-auto shadow-sm">
-                                <i class="bi bi-tag-fill fs-5 text-primary"></i>
+                                <i class="bi @iconClass fs-5 text-primary"></i>
                             </div>
                             <small class="text-dark fw-bold d-block">@cat.CategoryName</small>
                         </div>
@@ -94,6 +110,13 @@
             }
         }
     </div>
+</div>
+
+<!-- View All Products Call-to-Action -->
+<div class="text-center mb-5 animate__animated animate__fadeInUp">
+    <a asp-controller="Products" asp-action="Index" class="btn btn-lg btn-outline-primary rounded-pill px-5 py-3 fw-bold shadow-sm transition-all view-all-btn">
+        <i class="bi bi-grid-3x3-gap-fill me-2"></i>Explore All Products
+    </a>
 </div>
 
 <!-- "Adding More" Section -->
@@ -173,6 +196,14 @@
     .product-compact-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 12px 24px rgba(0,0,0,0.1) !important;
+    }
+    
+    .view-all-btn:hover {
+        background: linear-gradient(90deg, #007bff, #0056b3);
+        color: white;
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 10px 20px rgba(0,123,255,0.2) !important;
+        border-color: transparent;
     }
     
     .extra-small { font-size: 0.75rem; }

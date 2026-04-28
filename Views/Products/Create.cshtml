@@ -5,111 +5,178 @@
     var categories = ViewBag.AllCategories as IEnumerable<ShoppingApp.Models.Category>;
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
-                <div class="card-header bg-primary text-white py-4 px-5">
-                    <div class="d-flex align-items-center">
-                        <div class="icon-box bg-white text-primary rounded-4 p-2 me-3 shadow-sm">
-                            <i class="bi bi-plus-circle-fill fs-3"></i>
-                        </div>
-                        <div>
-                            <h2 class="fw-bold mb-0">Add New Product</h2>
-                            <p class="mb-0 text-white-50">Expand your inventory with premium items.</p>
+<div class="container mt-2 mb-5">
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary-subtle text-primary rounded-4 p-2 me-3" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-plus-circle-fill fs-4"></i>
+        </div>
+        <h4 class="fw-bold mb-0">Add New Product</h4>
+    </div>
+    <div class="card border-0 shadow-lg rounded-5 p-4">
+        <div class="card-body">
+            <form asp-action="Create" id="createProductForm" class="needs-validation" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 py-2 px-3 mb-4 small"></div>
+
+                <div class="row g-4">
+                    <!-- Left Column: Basic Info -->
+                    <div class="col-xl-8 col-lg-7">
+                        <div class="bg-light p-4 rounded-4 h-100">
+                            <div class="mb-4">
+                                <label asp-for="Name" class="form-label fw-bold small text-uppercase tracking-wider">Product Name</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-white border-0 px-3"><i class="bi bi-tag text-muted"></i></span>
+                                    <input asp-for="Name" id="productName" list="productSuggestions" autocomplete="off" class="form-control bg-white border-0 py-3" placeholder="Enter product name..." required pattern="^[a-zA-Z0-9\s\-_(),]+$" />
+                                    <datalist id="productSuggestions"></datalist>
+                                </div>
+                            </div>
+
+                            <div id="duplicateAlerts" class="mb-4" style="display: none;">
+                                <div id="globalRejection" class="alert alert-danger border-0 shadow-sm rounded-4 py-2 small mb-0 d-flex align-items-center" style="display: none;">
+                                    <i class="bi bi-x-circle-fill fs-5 me-2"></i> 
+                                    <div><strong>Error:</strong> A product with this name already exists in the database.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="Description" class="form-label fw-bold small text-uppercase tracking-wider">Product Description</label>
+                                <textarea asp-for="Description" id="productDesc" class="form-control bg-white border-0 py-3" rows="4" placeholder="Provide a detailed description of the product features and specifications..." required></textarea>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Price" class="form-label fw-bold small text-uppercase tracking-wider">Unit Price (₹)</label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-white border-0 px-3"><i class="bi bi-currency-rupee text-muted"></i></span>
+                                        <input asp-for="Price" id="productPrice" type="number" step="0.01" class="form-control bg-white border-0 py-3" placeholder="0.00" required min="0.01" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Stock" class="form-label fw-bold small text-uppercase tracking-wider">Initial Stock</label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-white border-0 px-3"><i class="bi bi-stack text-muted"></i></span>
+                                        <input asp-for="Stock" id="productStock" type="number" class="form-control bg-white border-0 py-3" placeholder="0" required min="0" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="card-body p-5">
-                    <form asp-action="Create" class="needs-validation" novalidate>
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4"></div>
 
-                        <div class="row g-4 mb-4">
-                            <!-- Product Name -->
-                            <div class="col-md-12">
-                                <label asp-for="Name" class="form-label fw-bold">Product Name</label>
+                    <!-- Right Column: Meta & Image -->
+                    <div class="col-xl-4 col-lg-5">
+                        <div class="bg-light p-4 rounded-4 h-100 d-flex flex-column">
+                            <div class="mb-4">
+                                <label for="categoryName" class="form-label fw-bold small text-uppercase tracking-wider">Product Category</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 px-3"><i class="bi bi-tag text-muted"></i></span>
-                                    <input asp-for="Name" class="form-control bg-light border-0 rounded-end-4 py-3" placeholder="e.g., Premium Headphones" required pattern="^[a-zA-Z0-9\s\-_]+$" />
-                                </div>
-                                <span asp-validation-for="Name" class="text-danger small ms-2"></span>
-                                <div class="invalid-feedback ms-2">Product name is required and should contain only alphanumeric characters.</div>
-                            </div>
-
-                            <!-- Description -->
-                            <div class="col-md-12">
-                                <label asp-for="Description" class="form-label fw-bold">Description</label>
-                                <textarea asp-for="Description" class="form-control bg-light border-0 rounded-4 py-3" rows="3" placeholder="Describe the product features..." required></textarea>
-                                <span asp-validation-for="Description" class="text-danger small ms-2"></span>
-                                <div class="invalid-feedback ms-2">Please provide a product description.</div>
-                            </div>
-
-                            <!-- Price & Stock -->
-                            <div class="col-md-6">
-                                <label asp-for="Price" class="form-label fw-bold">Price (₹)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 px-3"><i class="bi bi-currency-rupee text-muted"></i></span>
-                                    <input asp-for="Price" type="number" step="0.01" class="form-control bg-light border-0 rounded-end-4 py-3" placeholder="0.00" required min="0.01" />
-                                </div>
-                                <span asp-validation-for="Price" class="text-danger small ms-2"></span>
-                                <div class="invalid-feedback ms-2">Please enter a valid price greater than 0.</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="Stock" class="form-label fw-bold">Stock Quantity</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 px-3"><i class="bi bi-stack text-muted"></i></span>
-                                    <input asp-for="Stock" type="number" class="form-control bg-light border-0 rounded-end-4 py-3" placeholder="0" required min="0" />
-                                </div>
-                                <span asp-validation-for="Stock" class="text-danger small ms-2"></span>
-                                <div class="invalid-feedback ms-2">Please enter stock quantity (0 or more).</div>
-                            </div>
-
-                            <!-- Category Autocomplete -->
-                            <div class="col-md-12">
-                                <label for="categoryName" class="form-label fw-bold">Category</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 px-3"><i class="bi bi-grid text-muted"></i></span>
-                                    <input name="categoryName" list="categoryOptions" class="form-control bg-light border-0 rounded-end-4 py-3" placeholder="Type to search or add new category..." required id="categoryInput" />
-                                    <datalist id="categoryOptions">
+                                    <span class="input-group-text bg-white border-0 px-3"><i class="bi bi-grid text-muted"></i></span>
+                                    <select name="categoryName" id="categoryInput" class="form-select bg-white border-0 py-3 shadow-none" required>
+                                        <option value="" selected disabled>Choose a category...</option>
                                         @if (categories != null)
                                         {
                                             @foreach (var cat in categories)
                                             {
-                                                <option value="@cat.CategoryName"></option>
+                                                <option value="@cat.CategoryName">@cat.CategoryName</option>
                                             }
                                         }
-                                    </datalist>
+                                    </select>
                                 </div>
-                                <div id="newCategoryBadge" class="mt-2" style="display: none;">
-                                    <span class="badge bg-info-subtle text-info rounded-pill px-3 py-2 border border-info-subtle">
-                                        <i class="bi bi-stars me-1"></i> New Category will be created
-                                    </span>
+                                
+                                <div class="mt-3">
+                                    <p class="x-small fw-bold text-muted text-uppercase mb-2">Quick Select</p>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @if (categories != null)
+                                        {
+                                            @foreach (var cat in categories.Take(6))
+                                            {
+                                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 x-small fw-bold" 
+                                                        onclick="selectCategory('@cat.CategoryName')">
+                                                    @cat.CategoryName
+                                                </button>
+                                            }
+                                        }
+                                    </div>
                                 </div>
-                                <div class="invalid-feedback ms-2">Category is required.</div>
+                                <div class="mt-2 text-end">
+                                    <a asp-action="Categories" asp-controller="Admin" target="_blank" class="x-small text-decoration-none">
+                                        <i class="bi bi-plus-lg me-1"></i>Manage Categories
+                                    </a>
+                                </div>
                             </div>
 
-                            <!-- Image URL -->
-                            <div class="col-md-12">
-                                <label asp-for="ImageUrl" class="form-label fw-bold">Product Image URL</label>
+                            <div class="mb-4">
+                                <label asp-for="ImageUrl" class="form-label fw-bold small text-uppercase tracking-wider">Product Image URL</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 px-3"><i class="bi bi-image text-muted"></i></span>
-                                    <input asp-for="ImageUrl" class="form-control bg-light border-0 rounded-end-4 py-3" placeholder="https://example.com/image.jpg" required type="url" />
+                                    <span class="input-group-text bg-white border-0 px-3"><i class="bi bi-image text-muted"></i></span>
+                                    <input asp-for="ImageUrl" id="productImageUrl" class="form-control bg-white border-0 py-3" placeholder="Paste image URL here..." required type="url" />
                                 </div>
-                                <span asp-validation-for="ImageUrl" class="text-danger small ms-2"></span>
-                                <div class="invalid-feedback ms-2">Please provide a valid image URL.</div>
+                            </div>
+
+                            <div class="flex-grow-1 d-flex flex-column">
+                                <label class="form-label fw-bold small text-uppercase tracking-wider">Live Preview</label>
+                                <div class="preview-box border-0 rounded-4 bg-white d-flex align-items-center justify-content-center p-3 shadow-inner" style="flex-grow: 1; min-height: 200px;">
+                                    <img id="imagePreviewMini" src="https://via.placeholder.com/300x200?text=No+Image+Selected" class="img-fluid rounded-3 object-fit-contain" alt="Preview" style="max-height: 300px;">
+                                </div>
                             </div>
                         </div>
-
-                        <div class="d-flex gap-3 mt-5">
-                            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold shadow flex-grow-1">
-                                <i class="bi bi-check-circle-fill me-2"></i>Create Product
-                            </button>
-                            <a asp-action="Dashboard" asp-controller="Admin" class="btn btn-outline-secondary btn-lg rounded-pill px-5 py-3 fw-bold">
-                                Cancel
-                            </a>
-                        </div>
-                    </form>
+                    </div>
                 </div>
+
+                <div class="d-flex gap-3 mt-4">
+                    <button type="button" onclick="showConfirmationModal()" class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold shadow flex-grow-1">
+                        <i class="bi bi-shield-check me-2"></i>Review & Create Product
+                    </button>
+                    <a asp-action="Dashboard" asp-controller="Admin" class="btn btn-outline-secondary btn-lg rounded-pill px-5 py-3 fw-bold">
+                        Discard
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-5">
+            <div class="modal-header bg-primary text-white border-0 py-3 px-4">
+                <h5 class="modal-title fw-bold"><i class="bi bi-question-circle me-2"></i>Confirm Product Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="preview-image-container p-2 border rounded-4 bg-light mb-3 text-center">
+                            <img id="previewImage" src="" alt="Product Preview" class="img-fluid rounded-3" style="max-height: 250px;">
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="mb-2">
+                            <span class="text-muted small">Name</span>
+                            <h4 id="previewName" class="fw-bold mb-0"></h4>
+                        </div>
+                        <div class="mb-2">
+                            <span class="text-muted small">Category</span>
+                            <div><span id="previewCategory" class="badge bg-secondary-subtle text-secondary rounded-pill"></span></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-6">
+                                <span class="text-muted small">Price</span>
+                                <div class="fw-bold text-primary">₹<span id="previewPrice"></span></div>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted small">Stock</span>
+                                <div class="fw-bold"><span id="previewStock"></span> units</div>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-muted small">Description</span>
+                            <p id="previewDesc" class="text-secondary small"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Edit Details</button>
+                <button type="button" onclick="confirmSubmit()" class="btn btn-primary rounded-pill px-5 fw-bold">Confirm & Add Product</button>
             </div>
         </div>
     </div>
@@ -117,40 +184,137 @@
 
 <style>
     .icon-box {
-        width: 50px;
-        height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
     .form-control:focus {
         background-color: #fff !important;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-        border: 1px solid rgba(13, 110, 253, 0.5) !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+        border: none !important;
     }
-    .input-group-text {
-        border: none;
+    .shadow-inner {
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
     }
+    .tracking-wider {
+        letter-spacing: 0.05em;
+    }
+    .x-small {
+        font-size: 0.7rem;
+    }
+
 </style>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        // Custom Category Logic
+        // Live Suggestions and Duplicate Check
+        const productNameInput = document.getElementById('productName');
         const categoryInput = document.getElementById('categoryInput');
-        const categoryOptions = document.getElementById('categoryOptions');
-        const newCategoryBadge = document.getElementById('newCategoryBadge');
+        const productSuggestions = document.getElementById('productSuggestions');
         
-        const existingCategories = Array.from(categoryOptions.options).map(opt => opt.value.toLowerCase());
+        const duplicateAlerts = document.getElementById('duplicateAlerts');
+        const globalRejection = document.getElementById('globalRejection');
+        
+        let debounceTimer;
+        let isRejected = false;
 
-        categoryInput.addEventListener('input', function() {
-            const val = this.value.trim().toLowerCase();
-            if (val && !existingCategories.includes(val)) {
-                newCategoryBadge.style.display = 'block';
+        function runDuplicateCheck() {
+            clearTimeout(debounceTimer);
+            const name = productNameInput.value.trim();
+            const category = categoryInput.value;
+            
+            if (name.length < 2) {
+                duplicateAlerts.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                const url = `/Products/CheckDuplicate?name=${encodeURIComponent(name)}&category=${encodeURIComponent(category || '')}`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        isRejected = data.isGlobalDuplicate;
+                        
+                        if (data.isGlobalDuplicate) {
+                            duplicateAlerts.style.display = 'block';
+                            globalRejection.style.display = 'flex';
+                            productNameInput.classList.add('is-invalid');
+                            productNameInput.setCustomValidity('Product name already exists.');
+                        } else {
+                            duplicateAlerts.style.display = 'none';
+                            globalRejection.style.display = 'none';
+                            productNameInput.classList.remove('is-invalid');
+                            productNameInput.setCustomValidity('');
+                        }
+                    });
+                
+                // Also update datalist suggestions
+                fetch(`/Products/GetSuggestions?term=${encodeURIComponent(name)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        productSuggestions.innerHTML = '';
+                        data.forEach(n => {
+                            const opt = document.createElement('option');
+                            opt.value = n;
+                            productSuggestions.appendChild(opt);
+                        });
+                    });
+            }, 400);
+        }
+
+        productNameInput.addEventListener('input', runDuplicateCheck);
+        categoryInput.addEventListener('change', runDuplicateCheck);
+
+        function selectCategory(name) {
+            categoryInput.value = name;
+            runDuplicateCheck();
+        }
+
+        // Image Preview Logic
+        const imageUrlInput = document.getElementById('productImageUrl');
+        const imagePreview = document.getElementById('imagePreviewMini');
+
+        imageUrlInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            if (url) {
+                imagePreview.src = url;
             } else {
-                newCategoryBadge.style.display = 'none';
+                imagePreview.src = 'https://via.placeholder.com/300x200?text=No+Image+Selected';
             }
         });
+
+        // Modal Logic
+        const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        
+        function showConfirmationModal() {
+            if (isRejected) {
+                alert("Cannot proceed: A product with this name already exists in the database.");
+                return;
+            }
+
+            const form = document.getElementById('createProductForm');
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            document.getElementById('previewName').innerText = document.getElementById('productName').value;
+            document.getElementById('previewPrice').innerText = document.getElementById('productPrice').value;
+            document.getElementById('previewStock').innerText = document.getElementById('productStock').value;
+            document.getElementById('previewCategory').innerText = document.getElementById('categoryInput').value;
+            document.getElementById('previewImage').src = document.getElementById('productImageUrl').value;
+            
+            // Limit preview description length
+            const desc = document.getElementById('productDesc').value;
+            document.getElementById('previewDesc').innerText = desc.length > 200 ? desc.substring(0, 200) + '...' : desc;
+            
+            confirmationModal.show();
+        }
+
+        function confirmSubmit() {
+            document.getElementById('createProductForm').submit();
+        }
 
         // Bootstrap Validation
         (function () {

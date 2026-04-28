@@ -5,14 +5,10 @@ using Microsoft.Data.SqlClient;
 
 namespace ShoppingApp.Filters
 {
-    public class GlobalExceptionFilter : IExceptionFilter
+    public class GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger) : IExceptionFilter
     {
-        private readonly ILogger<GlobalExceptionFilter> _logger;
+        private readonly ILogger<GlobalExceptionFilter> _logger = logger;
 
-        public GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger)
-        {
-            _logger = logger;
-        }
 
         public void OnException(ExceptionContext context)
         {

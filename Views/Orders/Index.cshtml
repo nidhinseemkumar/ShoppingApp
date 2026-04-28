@@ -2,11 +2,13 @@
 @model IEnumerable<ShoppingApp.Models.Order>
 
 @{
-    ViewData["Title"] = "My Orders";
-    var indianCulture = new CultureInfo("en-IN");
+    ViewData["Title"] = "Order Management";
+    Layout = User.IsInRole("Admin") ? "_AdminLayout" : "_Layout";
+    CultureInfo indianCulture = new CultureInfo("en-IN");
 }
 
-<div class="container py-5">
+@if (User.IsInRole("Admin")) {
+
     <div class="d-flex align-items-center justify-content-between mb-5">
         <div>
             <h1 class="display-4 fw-bold mb-0">Order <span class="text-primary">History</span></h1>
@@ -17,6 +19,69 @@
         </div>
     </div>
 
+    <!-- Advanced Filter Bar -->
+    <div class="card border-0 shadow-sm rounded-5 mb-4">
+        <div class="card-body p-4">
+            <form asp-action="Index" method="get" id="filterFormAdmin">
+                <div class="row g-3">
+                    <!-- Search -->
+                    <div class="col-lg-4 col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" name="searchTerm" id="searchInputAdmin" list="orderSuggestionsAdmin" class="form-control bg-light border-0" placeholder="Order ID or Product..." value="@ViewBag.CurrentSearch" autocomplete="off">
+                            <datalist id="orderSuggestionsAdmin"></datalist>
+                        </div>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="col-lg-2 col-md-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">From Date</label>
+                        <input type="date" name="startDate" class="form-control bg-light border-0" value="@ViewBag.StartDate">
+                    </div>
+                    <div class="col-lg-2 col-md-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">To Date</label>
+                        <input type="date" name="endDate" class="form-control bg-light border-0" value="@ViewBag.EndDate">
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="col-lg-2 col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Min Price</label>
+                        <input type="number" name="minPrice" class="form-control bg-light border-0" placeholder="Min" value="@ViewBag.MinPrice">
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Max Price</label>
+                        <input type="number" name="maxPrice" class="form-control bg-light border-0" placeholder="Max" value="@ViewBag.MaxPrice">
+                    </div>
+
+                    <!-- Sort -->
+                    <div class="col-lg-2 col-md-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Sort By</label>
+                        <select name="sortBy" class="form-select bg-light border-0">
+                            <option value="date" selected="@(ViewBag.SortBy == "date")">Order Date</option>
+                            <option value="price" selected="@(ViewBag.SortBy == "price")">Total Amount</option>
+                        </select>
+                    </div>
+
+                    <!-- Order -->
+                    <div class="col-lg-2 col-md-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Order</label>
+                        <select name="isDescending" class="form-select bg-light border-0">
+                            <option value="true" selected="@(ViewBag.IsDescending == true)">Newest / Highest</option>
+                            <option value="false" selected="@(ViewBag.IsDescending == false)">Oldest / Lowest</option>
+                        </select>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-lg-4 col-md-4 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 flex-grow-1">Apply Filters</button>
+                        <a asp-action="Index" class="btn btn-light rounded-pill px-3"><i class="bi bi-x-lg"></i></a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @if (!Model.Any())
     {
         <div class="text-center py-5 shadow-lg bg-white rounded-5 border-0">
@@ -24,14 +89,14 @@
                 <i class="bi bi-bag-x display-1 text-muted opacity-25"></i>
             </div>
             <h2 class="fw-bold">No orders found.</h2>
-            <p class="text-muted mb-4">Start shopping to see your orders here.</p>
-            <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg">Browse Products</a>
+            <p class="text-muted mb-4">Try adjusting your filters or search terms.</p>
+            <a asp-action="Index" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg">Clear All Filters</a>
         </div>
     }
     else
     {
         <div class="row g-4">
-            @foreach (var order in Model.OrderByDescending(o => o.OrderDate))
+            @foreach (var order in Model)
             {
                 <div class="col-12">
                     <div class="card border-0 shadow-lg rounded-5 overflow-hidden order-card">
@@ -54,16 +119,20 @@
                                 </div>
                                 <div class="col-md-2 text-md-center">
                                     <div class="text-muted small text-uppercase fw-bold letter-spacing-1 mb-1">Amount</div>
-                                    <div class="fw-bold text-primary">₹@((order.TotalAmount ?? 0).ToString("N2", indianCulture))</div>
+                                    <div class="fw-bold text-primary">₹@((order.TotalAmount ?? 0m).ToString("N2", indianCulture))</div>
                                 </div>
-                                <div class="col-md-3 text-md-end">
+                                <div class="col-md-3 text-md-end d-flex align-items-center justify-content-end gap-2">
                                     @{
-                                        var statusClass = order.Status == "Paid" ? "bg-success text-success" : 
-                                                         order.Status == "Completed" ? "bg-info text-info" : "bg-warning text-warning";
+                                        var statusClass = order.Status == "Paid" || order.Status == "Delivered" ? "bg-success text-success" : 
+                                                         order.Status == "Pending" || order.Status == "Processing" ? "bg-warning text-warning" : 
+                                                         order.Status == "Shipped" || order.Status == "Completed" ? "bg-info text-info" : "bg-secondary text-secondary";
                                     }
                                     <span class="badge @statusClass bg-opacity-10 border @statusClass border-opacity-25 rounded-pill px-4 py-2">
                                         <i class="bi bi-dot me-1"></i>@order.Status
                                     </span>
+                                    <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                        Details
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -74,7 +143,7 @@
                                         <tr>
                                             <th class="ps-4 py-3 text-muted small text-uppercase">Items in this order</th>
                                             <th class="py-3 text-center text-muted small text-uppercase">Quantity</th>
-                                            <th class="pe-4 py-3 text-end text-muted small text-uppercase">Price</th>
+                                            <th class="pe-4 py-3 text-end text-muted small text-uppercase">Total</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -93,22 +162,187 @@
                                                     </div>
                                                 </td>
                                                 <td class="text-center fw-bold">@item.Quantity</td>
-                                                <td class="pe-4 text-end text-muted">₹@((item.Price ?? 0).ToString("N2", indianCulture))</td>
+                                                <td class="pe-4 text-end text-muted">
+                                                    ₹@((item.Price ?? 0m).ToString("N2", indianCulture)) * @(item.Quantity ?? 0) = <strong class="text-dark">₹@(((item.Price ?? 0m) * (item.Quantity ?? 0)).ToString("N2", indianCulture))</strong>
+                                                </td>
                                             </tr>
                                         }
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-                        <div class="card-footer bg-light p-3 text-center">
-                            <a href="#" class="btn btn-link text-decoration-none text-muted small"><i class="bi bi-file-earmark-pdf me-2"></i>Download Invoice</a>
-                        </div>
+
                     </div>
                 </div>
             }
         </div>
     }
-</div>
+} else {
+    <div class="container py-5">
+        <div class="d-flex align-items-center justify-content-between mb-5">
+            <div>
+                <h1 class="display-4 fw-bold mb-0">My <span class="text-primary">Orders</span></h1>
+                <p class="lead text-muted mt-2">Track and manage your previous purchases.</p>
+            </div>
+            <div class="icon-box bg-primary-subtle text-primary rounded-circle p-4">
+                <i class="bi bi-bag-check fs-1"></i>
+            </div>
+        </div>
+
+        <!-- Advanced Filter Bar (User) -->
+        <div class="card border-0 shadow-sm rounded-5 mb-4">
+            <div class="card-body p-4">
+                <form asp-action="Index" method="get" id="filterFormUser">
+                    <div class="row g-3">
+                        <div class="col-lg-4 col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Search</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" name="searchTerm" id="searchInputUser" list="orderSuggestionsUser" class="form-control bg-light border-0" placeholder="Order ID or Product..." value="@ViewBag.CurrentSearch" autocomplete="off">
+                                <datalist id="orderSuggestionsUser"></datalist>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">From</label>
+                                    <input type="date" name="startDate" class="form-control bg-light border-0" value="@ViewBag.StartDate">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">To</label>
+                                    <input type="date" name="endDate" class="form-control bg-light border-0" value="@ViewBag.EndDate">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Price Range</label>
+                            <div class="input-group">
+                                <input type="number" name="minPrice" class="form-control bg-light border-0" placeholder="Min" value="@ViewBag.MinPrice">
+                                <input type="number" name="maxPrice" class="form-control bg-light border-0" placeholder="Max" value="@ViewBag.MaxPrice">
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-md-6 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary rounded-pill w-100">Filter</button>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-lg-2 col-md-4">
+                            <select name="sortBy" class="form-select form-select-sm bg-light border-0 rounded-pill">
+                                <option value="date" selected="@(ViewBag.SortBy == "date")">Sort by Date</option>
+                                <option value="price" selected="@(ViewBag.SortBy == "price")">Sort by Amount</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-4">
+                            <select name="isDescending" class="form-select form-select-sm bg-light border-0 rounded-pill">
+                                <option value="true" selected="@(ViewBag.IsDescending == true)">Descending</option>
+                                <option value="false" selected="@(ViewBag.IsDescending == false)">Ascending</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-8 col-md-4 text-end">
+                            <a asp-action="Index" class="btn btn-link text-muted text-decoration-none small @(string.IsNullOrEmpty(ViewBag.CurrentSearch) && string.IsNullOrEmpty(ViewBag.StartDate) && string.IsNullOrEmpty(ViewBag.EndDate) && ViewBag.MinPrice == null && ViewBag.MaxPrice == null ? "d-none" : "")">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset Filters
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 shadow-lg bg-white rounded-5 border-0">
+                <div class="mb-4">
+                    <i class="bi bi-bag-x display-1 text-muted opacity-25"></i>
+                </div>
+                <h2 class="fw-bold">No orders found.</h2>
+                <p class="text-muted mb-4">Start shopping to see your orders here.</p>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg">Browse Products</a>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var order in Model)
+                {
+                    <div class="col-12">
+                        <div class="card border-0 shadow-lg rounded-5 overflow-hidden order-card">
+                            <div class="card-header bg-white border-0 p-4">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <div class="text-muted small text-uppercase fw-bold letter-spacing-1 mb-1">Order ID</div>
+                                        <div class="fw-bold fs-5">#@order.OrderId</div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="text-muted small text-uppercase fw-bold letter-spacing-1 mb-1">Date Placed</div>
+                                        <div class="fw-bold small">@order.OrderDate?.ToString("MMM dd, yyyy")</div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="text-muted small text-uppercase fw-bold letter-spacing-1 mb-1">Payment</div>
+                                        <div class="fw-bold small">
+                                            <i class="bi bi-wallet2 me-1"></i>
+                                            @(order.Payments?.FirstOrDefault()?.PaymentMethod ?? "N/A")
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-md-center">
+                                        <div class="text-muted small text-uppercase fw-bold letter-spacing-1 mb-1">Amount</div>
+                                        <div class="fw-bold text-primary">₹@((order.TotalAmount ?? 0m).ToString("N2", indianCulture))</div>
+                                    </div>
+                                    <div class="col-md-3 text-md-end d-flex align-items-center justify-content-end gap-2">
+                                        @{
+                                        var statusClass = order.Status == "Paid" || order.Status == "Delivered" ? "bg-success text-success" : 
+                                                         order.Status == "Pending" || order.Status == "Processing" ? "bg-warning text-warning" : 
+                                                         order.Status == "Shipped" || order.Status == "Completed" ? "bg-info text-info" : "bg-secondary text-secondary";
+                                        }
+                                        <span class="badge @statusClass bg-opacity-10 border @statusClass border-opacity-25 rounded-pill px-4 py-2">
+                                            <i class="bi bi-dot me-1"></i>@order.Status
+                                        </span>
+                                        <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                            Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-0 border-top border-light">
+                                <div class="table-responsive">
+                                    <table class="table table-borderless align-middle mb-0">
+                                        <thead class="bg-light-subtle">
+                                            <tr>
+                                                <th class="ps-4 py-3 text-muted small text-uppercase">Items in this order</th>
+                                                <th class="py-3 text-center text-muted small text-uppercase">Quantity</th>
+                                                <th class="pe-4 py-3 text-end text-muted small text-uppercase">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in order.OrderItems)
+                                            {
+                                                <tr>
+                                                    <td class="ps-4 py-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="product-thumb-sm me-3 rounded-3 bg-light p-1" style="width: 50px; height: 50px;">
+                                                                <img src="@(string.IsNullOrEmpty(item.Product?.ImageUrl) ? $"https://via.placeholder.com/50?text={item.Product?.Name}" : item.Product.ImageUrl)" 
+                                                                     class="img-fluid rounded-2 h-100 w-100 object-fit-cover" 
+                                                                     alt="@item.Product?.Name" 
+                                                                     onerror="handleImageError(this)">
+                                                            </div>
+                                                            <span class="fw-semibold">@(item.Product?.Name ?? "Premium Product")</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center fw-bold">@item.Quantity</td>
+                                                    <td class="pe-4 text-end text-muted">
+                                                        ₹@((item.Price ?? 0m).ToString("N2", indianCulture)) * @(item.Quantity ?? 0) = <strong class="text-dark">₹@(((item.Price ?? 0m) * (item.Quantity ?? 0)).ToString("N2", indianCulture))</strong>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
 
 <style>
     .letter-spacing-1 { letter-spacing: 1px; }
@@ -116,3 +350,43 @@
     .order-card { transition: transform 0.2s; }
     .order-card:hover { transform: translateY(-3px); }
 </style>
+
+@section Scripts {
+    <script>
+        function setupSuggestions(inputId, datalistId) {
+            const input = document.getElementById(inputId);
+            const datalist = document.getElementById(datalistId);
+            
+            if (!input || !datalist) return;
+
+            let timeout = null;
+            input.addEventListener('input', function() {
+                clearTimeout(timeout);
+                const term = this.value;
+                if (term.length < 2) {
+                    datalist.innerHTML = '';
+                    return;
+                }
+
+                timeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/Orders/Suggestions?term=${encodeURIComponent(term)}`);
+                        if (response.ok) {
+                            const suggestions = await response.json();
+                            datalist.innerHTML = suggestions
+                                .map(s => `<option value="${s}">`)
+                                .join('');
+                        }
+                    } catch (err) {
+                        console.error('Error fetching suggestions:', err);
+                    }
+                }, 300);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupSuggestions('searchInputAdmin', 'orderSuggestionsAdmin');
+            setupSuggestions('searchInputUser', 'orderSuggestionsUser');
+        });
+    </script>
+}

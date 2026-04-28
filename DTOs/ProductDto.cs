@@ -9,5 +9,10 @@ namespace ShoppingApp.DTOs
         public int Stock { get; set; }
         public string? ImageUrl { get; set; }
         public string? CategoryName { get; set; }
+        
+        public double AverageRating { get; set; }
+        public int ReviewCount { get; set; }
+        public List<ReviewDto> Reviews { get; set; } = new List<ReviewDto>();
+        public ReviewDto? UserReview { get; set; }
     }
 }

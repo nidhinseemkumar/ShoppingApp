@@ -1,0 +1,10 @@
+# Handle line endings automatically for text files
+* text=auto
+
+# Ensure C#, Razor, and other web files use CRLF in the working directory on Windows
+*.cs text eol=crlf
+*.cshtml text eol=crlf
+*.css text eol=crlf
+*.js text eol=crlf
+*.json text eol=crlf
+*.md text eol=crlf

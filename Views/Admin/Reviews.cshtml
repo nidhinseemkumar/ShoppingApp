@@ -1,0 +1,114 @@
+@model IEnumerable<ShoppingApp.DTOs.ReviewDto>
+
+@{
+    ViewData["Title"] = "Recent Reviews";
+    Layout = "_AdminLayout";
+}
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <p class="text-muted mb-0">Displaying <span class="fw-bold text-dark">@Model.Count()</span> recent reviews from users.</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-5 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr class="text-muted small text-uppercase fw-bold">
+                    <th class="ps-4">Product</th>
+                    <th>User</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                    <th>Last Modified</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var review in Model)
+                {
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-3 overflow-hidden me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                    @if (!string.IsNullOrEmpty(review.ProductImageUrl))
+                                    {
+                                        <img src="@review.ProductImageUrl" alt="@review.ProductName" class="img-fluid w-100 h-100 object-fit-cover" />
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-box-seam text-primary"></i>
+                                    }
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 small fw-bold">
+                                        <a asp-controller="Products" asp-action="Details" asp-route-id="@review.ProductId" class="text-decoration-none text-dark hover-primary">
+                                            @review.ProductName
+                                        </a>
+                                    </h6>
+                                    <span class="text-muted extra-small">ID: #@review.ProductId</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary-subtle text-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: 700; font-size: 0.8rem;">
+                                    @(review.UserName?[0] ?? 'U')
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 small fw-bold">@review.UserName</h6>
+                                    <span class="text-muted extra-small">ID: #@review.UserId</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-warning">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= review.Rating)
+                                    {
+                                        <i class="bi bi-star-fill"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-star text-muted"></i>
+                                    }
+                                }
+                                <span class="ms-1 text-dark fw-bold small">@review.Rating</span>
+                            </div>
+                        </td>
+                        <td>
+                            <p class="mb-0 small text-truncate" style="max-width: 300px;" title="@review.Comment">
+                                @review.Comment
+                            </p>
+                        </td>
+                        <td>
+                            <div class="small">
+                                <div>@((review.UpdatedAt ?? review.CreatedAt).ToString("MMM dd, yyyy"))</div>
+                                <div class="text-muted extra-small">@((review.UpdatedAt ?? review.CreatedAt).ToString("hh:mm tt"))</div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-chat-left-dots fs-1 d-block mb-3 opacity-25"></i>
+                                <p>No reviews found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white py-3 px-4 border-top">
+        <span class="text-muted small">Showing @Model.Count() entries</span>
+    </div>
+</div>
+
+<style>
+    .extra-small { font-size: 0.75rem; }
+    .hover-primary:hover { color: var(--bs-primary) !important; }
+</style>

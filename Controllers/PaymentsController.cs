@@ -7,24 +7,23 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using ShoppingApp.Models;
+using ShoppingApp.DTOs;
+using ShoppingApp.Wrappers;
 
 namespace ShoppingApp.Controllers
 {
     [Authorize]
-    public class PaymentsController : Controller
+    public class PaymentsController(
+        IPaymentService paymentService, 
+        ICartService cartService, 
+        IOrderService orderService, 
+        IProductService productService) : Controller
     {
-        private readonly IPaymentService _paymentService;
-        private readonly ICartService _cartService;
-        private readonly IOrderService _orderService;
-        private readonly IProductService _productService;
+        private readonly IPaymentService _paymentService = paymentService;
+        private readonly ICartService _cartService = cartService;
+        private readonly IOrderService _orderService = orderService;
+        private readonly IProductService _productService = productService;
 
-        public PaymentsController(IPaymentService paymentService, ICartService cartService, IOrderService orderService, IProductService productService)
-        {
-            _paymentService = paymentService;
-            _cartService = cartService;
-            _orderService = orderService;
-            _productService = productService;
-        }
 
         public async Task<IActionResult> Index(int? orderId, int? productId)
         {
@@ -76,7 +75,8 @@ namespace ShoppingApp.Controllers
                 // Buy Now: Create order for single product
                 await _orderService.BuyNowAsync(productId.Value, userId);
                 var orders = await _orderService.GetUserOrdersAsync(userId);
-                var latestOrder = orders.OrderByDescending(o => o.OrderDate).First();
+                var latestOrder = orders.OrderByDescending(o => o.OrderDate).FirstOrDefault();
+                if (latestOrder == null) return RedirectToAction("Index", "Home");
                 finalOrderId = latestOrder.OrderId;
                 amount = latestOrder.TotalAmount ?? 0;
             }
@@ -90,7 +90,9 @@ namespace ShoppingApp.Controllers
                 await _cartService.CheckoutAsync(userId);
                 
                 var orders = await _orderService.GetUserOrdersAsync(userId);
-                finalOrderId = orders.OrderByDescending(o => o.OrderDate).First().OrderId;
+                var latestOrder = orders.OrderByDescending(o => o.OrderDate).FirstOrDefault();
+                if (latestOrder == null) return RedirectToAction("Index", "Home");
+                finalOrderId = latestOrder.OrderId;
             }
 
             await _paymentService.ProcessPaymentAsync(finalOrderId, amount, paymentMethod);

@@ -30,7 +30,7 @@ namespace ShoppingApp.Services
                 Amount = amount,
                 PaymentMethod = method,
                 PaymentDate = DateTime.Now,
-                PaymentStatus = "Completed"
+                PaymentStatus = method == "COD" ? "Pending Collection" : "Completed"
             };
 
             await _unitOfWork.Repository<Payment>().AddAsync(payment);
@@ -39,7 +39,7 @@ namespace ShoppingApp.Services
             var order = await _unitOfWork.Repository<Order>().GetByIdAsync(orderId);
             if (order != null)
             {
-                order.Status = "Paid";
+                order.Status = "Pending";
                 _unitOfWork.Repository<Order>().Update(order);
             }
 

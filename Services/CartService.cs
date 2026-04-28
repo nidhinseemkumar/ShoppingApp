@@ -16,16 +16,11 @@ namespace ShoppingApp.Services
         Task CheckoutAsync(int userId);
     }
 
-    public class CartService : ICartService
+    public class CartService(ShoppingDbContext context, ILogger<CartService> logger) : ICartService
     {
-        private readonly ShoppingDbContext _context;
-        private readonly ILogger<CartService> _logger;
+        private readonly ShoppingDbContext _context = context;
+        private readonly ILogger<CartService> _logger = logger;
 
-        public CartService(ShoppingDbContext context, ILogger<CartService> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
 
         public async Task<IEnumerable<Cart>> GetCartItemsAsync(int userId)
         {
@@ -131,7 +126,7 @@ namespace ShoppingApp.Services
                         UserId = userId,
                         OrderDate = DateTime.Now,
                         TotalAmount = totalAmount,
-                        Status = "Paid"
+                        Status = "Pending"
                     };
                     _context.Orders.Add(newOrder);
                     await _context.SaveChangesAsync();

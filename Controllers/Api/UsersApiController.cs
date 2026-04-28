@@ -9,14 +9,10 @@ namespace ShoppingApp.Controllers.Api
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UsersApiController : ControllerBase
+    public class UsersApiController(IUserService userService) : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IUserService _userService = userService;
 
-        public UsersApiController(IUserService userService)
-        {
-            _userService = userService;
-        }
 
         [HttpGet]
         public async Task<ActionResult<ApiResponse<IEnumerable<UserDto>>>> GetAll()
@@ -38,8 +34,8 @@ namespace ShoppingApp.Controllers.Api
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             
-            var result = await _userService.RegisterDtoAsync(registerDto);
-            return Ok(new ApiResponse<UserDto>(result, "User registered successfully"));
+            var response = await _userService.RegisterUserAsync(registerDto);
+            return response.Success ? Ok(response) : BadRequest(response);
         }
     }
 }

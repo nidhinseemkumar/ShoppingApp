@@ -8,7 +8,7 @@ namespace ShoppingApp.Repositories
 {
     public interface IGenericRepository<T> where T : class
     {
-        Task<T> GetByIdAsync(int id);
+        Task<T?> GetByIdAsync(int id);
         Task<IEnumerable<T>> GetAllAsync();
         IQueryable<T> GetQueryable();
         Task AddAsync(T entity);

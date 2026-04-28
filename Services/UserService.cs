@@ -5,31 +5,27 @@ using Microsoft.EntityFrameworkCore;
 using ShoppingApp.DTOs;
 using ShoppingApp.Models;
 using ShoppingApp.Repositories;
+using ShoppingApp.Wrappers;
 
 namespace ShoppingApp.Services
 {
     public interface IUserService
     {
         Task<IEnumerable<UserDto>> GetAllUsersAsync(string? searchTerm = null);
-        Task<UserDto> GetUserByIdAsync(int id);
-        Task<UserDto> RegisterDtoAsync(UserRegisterDto registerDto);
+        Task<UserDto?> GetUserByIdAsync(int id);
+        Task<ApiResponse<UserDto>> RegisterUserAsync(UserRegisterDto registerDto);
         Task<User?> LoginAsync(string email, string password);
-        Task RegisterAsync(User user);
-        Task UpdateUserAsync(User user);
+        Task<ApiResponse<bool>> RegisterAsync(User user);
+        Task<ApiResponse<bool>> UpdateUserAsync(UserDto userDto);
         Task<User?> GetUserEntityByIdAsync(int id);
-        Task DeleteUserAsync(int id);
+        Task<ApiResponse<bool>> DeleteUserAsync(int id);
     }
 
-    public class UserService : IUserService
+    public class UserService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService> logger) : IUserService
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
-
-        public UserService(IUnitOfWork unitOfWork, IMapper mapper)
-        {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-        }
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IMapper _mapper = mapper;
+        private readonly ILogger<UserService> _logger = logger;
 
         public async Task<IEnumerable<UserDto>> GetAllUsersAsync(string? searchTerm = null)
         {
@@ -45,34 +41,39 @@ namespace ShoppingApp.Services
             }
 
             var users = await query.ToListAsync();
-            return _mapper.Map<IEnumerable<UserDto>>(users);
+            return _mapper.Map<IEnumerable<UserDto>>(users) ?? [];
         }
 
-        public async Task<UserDto> GetUserByIdAsync(int id)
+        public async Task<UserDto?> GetUserByIdAsync(int id)
         {
             var user = await _unitOfWork.Repository<User>().GetByIdAsync(id);
-            return _mapper.Map<UserDto>(user);
+            return user != null ? _mapper.Map<UserDto>(user) : null;
         }
 
-        public async Task<UserDto> RegisterDtoAsync(UserRegisterDto registerDto)
+        public async Task<ApiResponse<UserDto>> RegisterUserAsync(UserRegisterDto registerDto)
         {
-            var existingUser = await _unitOfWork.Repository<User>()
-                .GetQueryable()
-                .AnyAsync(u => u.Email == registerDto.Email || u.Phone == registerDto.Phone);
-
-            if (existingUser)
+            try
             {
-                throw new System.Exception("User with this email or phone already exists.");
+                var existingUser = await _unitOfWork.Repository<User>()
+                    .GetQueryable()
+                    .AnyAsync(u => u.Email == registerDto.Email || u.Phone == registerDto.Phone);
+
+                if (existingUser) return new ApiResponse<UserDto>("User with this email or phone already exists.");
+
+                var user = _mapper.Map<User>(registerDto);
+                user.Password = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
+                user.Role = "Customer";
+
+                await _unitOfWork.Repository<User>().AddAsync(user);
+                await _unitOfWork.CompleteAsync();
+
+                return new ApiResponse<UserDto>(_mapper.Map<UserDto>(user)!, "Registration successful");
             }
-
-            var user = _mapper.Map<User>(registerDto);
-            user.Password = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
-            user.Role = "Customer";
-
-            await _unitOfWork.Repository<User>().AddAsync(user);
-            await _unitOfWork.CompleteAsync();
-
-            return _mapper.Map<UserDto>(user);
+            catch (System.Exception ex)
+            {
+                _logger.LogError(ex, "Error registering user");
+                return new ApiResponse<UserDto>("An error occurred during registration");
+            }
         }
 
         public async Task<User?> LoginAsync(string email, string password)
@@ -104,36 +105,50 @@ namespace ShoppingApp.Services
             return isVerified ? user : null;
         }
 
-        public async Task RegisterAsync(User user)
+        public async Task<ApiResponse<bool>> RegisterAsync(User user)
         {
-            var existingUser = await _unitOfWork.Repository<User>()
-                .GetQueryable()
-                .AnyAsync(u => u.Email == user.Email || u.Phone == user.Phone);
-
-            if (existingUser)
+            try
             {
-                throw new System.Exception("User with this email or phone already exists.");
-            }
+                var existingUser = await _unitOfWork.Repository<User>()
+                    .GetQueryable()
+                    .AnyAsync(u => u.Email == user.Email || u.Phone == user.Phone);
 
-            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-            user.Role = "Customer";
-            await _unitOfWork.Repository<User>().AddAsync(user);
-            await _unitOfWork.CompleteAsync();
+                if (existingUser) return new ApiResponse<bool>("User with this email or phone already exists.");
+
+                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                user.Role = "Customer";
+                await _unitOfWork.Repository<User>().AddAsync(user);
+                await _unitOfWork.CompleteAsync();
+                return new ApiResponse<bool>(true, "User registered successfully");
+            }
+            catch (System.Exception ex)
+            {
+                _logger.LogError(ex, "Error in RegisterAsync");
+                return new ApiResponse<bool>("Failed to register user");
+            }
         }
 
-        public async Task UpdateUserAsync(User user)
+        public async Task<ApiResponse<bool>> UpdateUserAsync(UserDto userDto)
         {
-            var existingUser = await _unitOfWork.Repository<User>().GetByIdAsync(user.UserId);
-            if (existingUser != null)
+            try
             {
-                existingUser.FirstName = user.FirstName;
-                existingUser.LastName = user.LastName;
-                existingUser.Phone = user.Phone;
-                existingUser.Address = user.Address;
-                // We don't update Email or Password here as they are sensitive/readonly in this flow
+                var existingUser = await _unitOfWork.Repository<User>().GetByIdAsync(userDto.UserId);
+                if (existingUser == null) return new ApiResponse<bool>("User not found");
+
+                existingUser.FirstName = userDto.FirstName;
+                existingUser.LastName = userDto.LastName;
+                existingUser.Phone = userDto.Phone;
+                existingUser.Address = userDto.Address;
+                if (!string.IsNullOrEmpty(userDto.Role)) existingUser.Role = userDto.Role!;
                 
                 _unitOfWork.Repository<User>().Update(existingUser);
                 await _unitOfWork.CompleteAsync();
+                return new ApiResponse<bool>(true, "User updated successfully");
+            }
+            catch (System.Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user {UserId}", userDto.UserId);
+                return new ApiResponse<bool>("Failed to update user");
             }
         }
 
@@ -142,13 +157,21 @@ namespace ShoppingApp.Services
             return await _unitOfWork.Repository<User>().GetByIdAsync(id);
         }
 
-        public async Task DeleteUserAsync(int id)
+        public async Task<ApiResponse<bool>> DeleteUserAsync(int id)
         {
-            var user = await _unitOfWork.Repository<User>().GetByIdAsync(id);
-            if (user != null)
+            try
             {
+                var user = await _unitOfWork.Repository<User>().GetByIdAsync(id);
+                if (user == null) return new ApiResponse<bool>("User not found");
+
                 _unitOfWork.Repository<User>().Delete(user);
                 await _unitOfWork.CompleteAsync();
+                return new ApiResponse<bool>(true, "User deleted successfully");
+            }
+            catch (System.Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting user {UserId}", id);
+                return new ApiResponse<bool>("Failed to delete user");
             }
         }
     }

@@ -1,0 +1,284 @@
+@using System.Globalization
+@model IEnumerable<ShoppingApp.DTOs.ProductDto>
+
+@{
+    ViewData["Title"] = "Manage Products";
+    Layout = "_AdminLayout";
+    var indianCulture = new CultureInfo("en-IN");
+}
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <p class="text-muted mb-0">Total Products: <span class="fw-bold text-dark">@Model.Count()</span></p>
+        @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch as string))
+        {
+            <p class="small text-muted mb-0">Showing results for: <span class="fw-bold">"@ViewBag.CurrentSearch"</span> <a asp-action="Products" class="ms-2">Clear</a></p>
+        }
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a asp-controller="Products" asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i>Add New Product
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-5 overflow-hidden">
+    <div class="card-header bg-white py-3 px-4 border-bottom">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <form asp-action="Products" method="get" class="input-group">
+                    <span class="input-group-text bg-light border-0 rounded-start-pill ps-3"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch" class="form-control bg-light border-0 py-2" placeholder="Search products...">
+                    <button type="submit" class="btn btn-light border-0 rounded-end-pill px-3">Search</button>
+                </form>
+            </div>
+            <div class="col-md-8 text-md-end">
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-light rounded-pill px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        @(ViewBag.CurrentCategory ?? "Filter by Category")
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end rounded-4 border-0 shadow mt-2">
+                        <li><a class="dropdown-item" asp-action="Products">All Categories</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        @foreach (var cat in (IEnumerable<ShoppingApp.Models.Category>)ViewBag.Categories)
+                        {
+                            <li><a class="dropdown-item @(ViewBag.CurrentCategory == cat.CategoryName ? "active" : "")" 
+                                   asp-action="Products" asp-route-category="@cat.CategoryName">@cat.CategoryName</a></li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="productsTable">
+            <thead class="bg-light">
+                <tr class="text-muted small text-uppercase fw-bold">
+                    <th class="ps-4">Product Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-4 p-1 me-3" style="width: 50px; height: 50px;">
+                                    <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://via.placeholder.com/50" : item.ImageUrl)" 
+                                         class="w-100 h-100 object-fit-contain rounded-3" alt="">
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">@item.Name</h6>
+                                    <span class="text-muted small">ID: #@item.ProductId</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-soft-primary rounded-pill px-3">@item.CategoryName</span>
+                        </td>
+                        <td class="fw-bold">₹@item.Price.ToString("N2", indianCulture)</td>
+                        <td>
+                            <span class="fw-bold @(item.Stock < 10 ? "text-danger" : "text-dark")">@item.Stock Units</span>
+                        </td>
+                        <td>
+                            @if (item.Stock > 0)
+                            {
+                                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1 border border-success-subtle small">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Active
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1 border border-danger-subtle small">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Out of Stock
+                                </span>
+                            }
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+                                <button type="button" class="btn btn-white btn-sm px-3 border-end" 
+                                        onclick="quickEdit(@item.ProductId, '@item.Name', @item.Price, @item.Stock)">
+                                    <i class="bi bi-lightning text-warning"></i>
+                                </button>
+                                <a asp-controller="Products" asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-white btn-sm px-3 border-end">
+                                    <i class="bi bi-pencil text-primary"></i>
+                                </a>
+                                <a asp-controller="Products" asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-white btn-sm px-3">
+                                    <i class="bi bi-trash text-danger"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white py-3 px-4 border-top">
+        <nav class="d-flex justify-content-between align-items-center">
+            <span class="text-muted small">Showing 1 to @Model.Count() of @Model.Count() entries</span>
+            <ul class="pagination pagination-sm mb-0 rounded-pill overflow-hidden border">
+                <li class="page-item disabled"><a class="page-link border-0" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link border-0" href="#">1</a></li>
+                <li class="page-item"><a class="page-link border-0" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Quick Edit Modal -->
+    <div class="modal fade" id="quickEditModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered shadow-lg">
+            <div class="modal-content border-0 rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="quickEditTitle">Quick Edit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editProductId">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Price (₹)</label>
+                        <input type="number" id="editPrice" class="form-control rounded-3" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Stock Quantity</label>
+                        <input type="number" id="editStock" class="form-control rounded-3">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="saveQuickEdit()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quickEditModal = new bootstrap.Modal(document.getElementById('quickEditModal'));
+        const productsTableBody = document.querySelector('#productsTable tbody');
+        const searchInput = document.querySelector('input[name="searchTerm"]');
+        const categoryFilterLinks = document.querySelectorAll('.dropdown-item[asp-action="Products"]');
+        let currentCategory = '@ViewBag.CurrentCategory';
+
+        // Live Search Logic
+        let searchDebounce;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => fetchProducts(), 300);
+        });
+
+        // Prevent form submit
+        document.querySelector('form[asp-action="Products"]').addEventListener('submit', (e) => {
+            e.preventDefault();
+            fetchProducts();
+        });
+
+        async function fetchProducts() {
+            const searchTerm = searchInput.value;
+            const url = `/Admin/FilterProducts?searchTerm=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(currentCategory || '')}`;
+            
+            try {
+                const response = await fetch(url);
+                const products = await response.json();
+                renderProducts(products);
+            } catch (err) {
+                console.error('Search failed:', err);
+            }
+        }
+
+        function renderProducts(products) {
+            productsTableBody.innerHTML = '';
+            if (products.length === 0) {
+                productsTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">No products found</td></tr>';
+                return;
+            }
+
+            products.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light rounded-4 p-1 me-3" style="width: 50px; height: 50px;">
+                                <img src="${item.imageUrl || 'https://via.placeholder.com/50'}" class="w-100 h-100 object-fit-contain rounded-3" alt="">
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">${item.name}</h6>
+                                <span class="text-muted small">ID: #${item.productId}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge badge-soft-primary rounded-pill px-3">${item.categoryName}</span>
+                    </td>
+                    <td class="fw-bold">₹${item.price.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                    <td>
+                        <span class="fw-bold ${item.stock < 10 ? 'text-danger' : 'text-dark'}">${item.stock} Units</span>
+                    </td>
+                    <td>
+                        ${item.stock > 0 
+                            ? `<span class="badge bg-success-subtle text-success rounded-pill px-3 py-1 border border-success-subtle small"><i class="bi bi-check-circle-fill me-1"></i> Active</span>`
+                            : `<span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1 border border-danger-subtle small"><i class="bi bi-x-circle-fill me-1"></i> Out of Stock</span>`
+                        }
+                    </td>
+                    <td class="text-end pe-4">
+                        <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+                            <button type="button" class="btn btn-white btn-sm px-3 border-end" onclick="quickEdit(${item.productId}, '${item.name}', ${item.price}, ${item.stock})">
+                                <i class="bi bi-lightning text-warning"></i>
+                            </button>
+                            <a href="/Products/Edit/${item.productId}" class="btn btn-white btn-sm px-3 border-end">
+                                <i class="bi bi-pencil text-primary"></i>
+                            </a>
+                            <a href="/Products/Delete/${item.productId}" class="btn btn-white btn-sm px-3">
+                                <i class="bi bi-trash text-danger"></i>
+                            </a>
+                        </div>
+                    </td>
+                `;
+                productsTableBody.appendChild(row);
+            });
+        }
+
+        function quickEdit(id, name, price, stock) {
+            document.getElementById('quickEditTitle').innerText = 'Quick Edit: ' + name;
+            document.getElementById('editProductId').value = id;
+            document.getElementById('editPrice').value = price;
+            document.getElementById('editStock').value = stock;
+            quickEditModal.show();
+        }
+
+        async function saveQuickEdit() {
+            const id = document.getElementById('editProductId').value;
+            const price = document.getElementById('editPrice').value;
+            const stock = document.getElementById('editStock').value;
+
+            try {
+                const stockRes = await fetch('/Products/UpdateStock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `productId=${id}&stock=${stock}`
+                });
+                
+                const priceRes = await fetch('/Products/UpdatePrice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `productId=${id}&price=${price}`
+                });
+
+                if (stockRes.ok && priceRes.ok) {
+                    fetchProducts(); // Refresh lively
+                    quickEditModal.hide();
+                } else {
+                    alert('Failed to update product');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred');
+            }
+        }
+    </script>
+}

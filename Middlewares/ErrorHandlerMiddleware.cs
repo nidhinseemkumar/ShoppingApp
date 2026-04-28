@@ -9,16 +9,11 @@ using ShoppingApp.Wrappers;
 
 namespace ShoppingApp.Middlewares
 {
-    public class ErrorHandlerMiddleware
+    public class ErrorHandlerMiddleware(RequestDelegate next, ILogger<ErrorHandlerMiddleware> logger)
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<ErrorHandlerMiddleware> _logger;
+        private readonly RequestDelegate _next = next;
+        private readonly ILogger<ErrorHandlerMiddleware> _logger = logger;
 
-        public ErrorHandlerMiddleware(RequestDelegate next, ILogger<ErrorHandlerMiddleware> logger)
-        {
-            _next = next;
-            _logger = logger;
-        }
 
         public async Task Invoke(HttpContext context)
         {
@@ -30,17 +25,17 @@ namespace ShoppingApp.Middlewares
             {
                 var response = context.Response;
                 response.ContentType = "application/json";
-                var responseModel = new ApiResponse<string>() { Success = false, Message = error?.Message };
+                var responseModel = new ApiResponse<string>() { Success = false, Message = error.Message };
 
                 switch (error)
                 {
-                    case KeyNotFoundException e:
+                    case KeyNotFoundException:
                         // not found error
                         response.StatusCode = (int)HttpStatusCode.NotFound;
                         break;
                     default:
                         // unhandled error
-                        _logger.LogError(error, error.Message);
+                        _logger.LogError(error, "Unhandled exception: {Message}", error.Message);
                         response.StatusCode = (int)HttpStatusCode.InternalServerError;
                         break;
                 }

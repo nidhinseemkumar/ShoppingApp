@@ -5,20 +5,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShoppingApp.Models;
 using ShoppingApp.Services;
+using ShoppingApp.Wrappers;
+using ShoppingApp.DTOs;
+using AutoMapper;
 using System.Security.Claims;
 
 namespace ShoppingApp.Controllers
 {
-    public class UsersController : Controller
+    public class UsersController(IUserService userService, ITokenService tokenService, IMapper mapper) : Controller
     {
-        private readonly IUserService _userService;
-        private readonly ITokenService _tokenService;
+        private readonly IUserService _userService = userService;
+        private readonly ITokenService _tokenService = tokenService;
+        private readonly IMapper _mapper = mapper;
 
-        public UsersController(IUserService userService, ITokenService tokenService)
-        {
-            _userService = userService;
-            _tokenService = tokenService;
-        }
 
         // GET: Users (Admin only functionality)
         [Authorize(Roles = "Admin")]
@@ -37,13 +36,14 @@ namespace ShoppingApp.Controllers
                 return RedirectToAction("Login");
             }
 
-            var user = await _userService.GetUserByIdAsync(userId);
+            var user = await _userService.GetUserEntityByIdAsync(userId);
             if (user == null)
             {
                 return NotFound();
             }
 
-            return View(user);
+            var userDto = _mapper.Map<UserDto>(user);
+            return View(userDto);
         }
 
         // GET: Users/Signup
@@ -61,8 +61,9 @@ namespace ShoppingApp.Controllers
             {
                 try
                 {
-                    await _userService.RegisterAsync(user);
-                    return RedirectToAction(nameof(Login));
+                    var response = await _userService.RegisterAsync(user);
+                    if (response.Success) return RedirectToAction(nameof(Login));
+                    ModelState.AddModelError(string.Empty, response.Message ?? "Registration failed");
                 }
                 catch (System.Exception ex)
                 {
@@ -108,7 +109,7 @@ namespace ShoppingApp.Controllers
 
                 var authProperties = new AuthenticationProperties
                 {
-                    IsPersistent = true
+                    IsPersistent = false
                 };
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
@@ -122,7 +123,7 @@ namespace ShoppingApp.Controllers
             }
 
             ViewBag.Error = "Invalid Email or Password";
-            return View(new User { Email = email });
+            return View();
         }
 
         // POST: Users/Logout
@@ -139,38 +140,69 @@ namespace ShoppingApp.Controllers
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
-            var user = await _userService.GetUserByIdAsync(id.Value);
+            
+            var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            
+            if (currentUserIdStr != id.ToString() && !isAdmin)
+            {
+                return Forbid();
+            }
+
+            var user = await _userService.GetUserEntityByIdAsync(id.Value);
             if (user == null) return NotFound();
             return View(user);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("UserId,FirstName,LastName,Email,Phone,Address")] User user)
+        public async Task<IActionResult> Edit(int id, [Bind("UserId,FirstName,LastName,Email,Phone,Address,Role")] User user)
         {
             if (id != user.UserId) return NotFound();
+
+            var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+
+            // Security: Allow if editing self OR if user is admin
+            if (currentUserIdStr != user.UserId.ToString() && !isAdmin)
+            {
+                return Forbid();
+            }
             
-            // Remove Password and Email from validation as they are not being edited here
+            // Remove Password from validation
             ModelState.Remove("Password");
-            ModelState.Remove("Email");
 
             if (ModelState.IsValid)
             {
-                await _userService.UpdateUserAsync(user);
+                var userDto = _mapper.Map<UserDto>(user);
+                var response = await _userService.UpdateUserAsync(userDto);
 
-                // Refresh the authentication cookie with the new name
-                var claims = new List<Claim>
+                if (!response.Success)
                 {
-                    new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
-                    new Claim(ClaimTypes.Email, user.Email ?? ""),
-                    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                    new Claim(ClaimTypes.Role, user.Role ?? "Customer")
-                };
+                    ModelState.AddModelError(string.Empty, response.Message ?? "Update failed");
+                    return View(user);
+                }
 
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+                // Only refresh cookie if the user edited their OWN profile
+                if (currentUserIdStr == user.UserId.ToString())
+                {
+                    // Refresh the authentication cookie with the new name
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
+                        new Claim(ClaimTypes.Email, user.Email ?? ""),
+                        new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                        new Claim(ClaimTypes.Role, user.Role ?? "Customer")
+                    };
 
-                return RedirectToAction(nameof(Profile));
+                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                // If Admin edited another user, go back to Admin Users list
+                return RedirectToAction("Users", "Admin");
             }
             return View(user);
         }
@@ -181,17 +213,29 @@ namespace ShoppingApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleRole(int id)
         {
-            var user = await _userService.GetUserByIdAsync(id);
+            var user = await _userService.GetUserEntityByIdAsync(id);
             if (user == null) return NotFound();
 
             var userEntity = await _userService.GetUserEntityByIdAsync(id);
             if (userEntity != null)
             {
                 userEntity.Role = userEntity.Role == "Admin" ? "Customer" : "Admin";
-                await _userService.UpdateUserAsync(userEntity);
+                var userDto = _mapper.Map<UserDto>(userEntity);
+                await _userService.UpdateUserAsync(userDto);
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Users/Delete/5
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+            var user = await _userService.GetUserEntityByIdAsync(id.Value);
+            if (user == null) return NotFound();
+            var userDto = _mapper.Map<UserDto>(user);
+            return View(userDto);
         }
 
         // POST: Users/Delete/5
@@ -200,7 +244,11 @@ namespace ShoppingApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            await _userService.DeleteUserAsync(id);
+            var response = await _userService.DeleteUserAsync(id);
+            if (!response.Success)
+            {
+                // Optionally handle error (e.g., TempData["Error"] = response.Message)
+            }
             return RedirectToAction(nameof(Index));
         }
     }
