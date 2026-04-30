@@ -83,6 +83,11 @@ namespace ShoppingApp.Migrations
                     b.Property<DateTime?>("OrderDate")
                         .HasColumnType("datetime");
 
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
                     b.Property<decimal?>("TotalAmount")
                         .HasColumnType("decimal(10, 2)");
 
@@ -206,6 +211,34 @@ namespace ShoppingApp.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("ShoppingApp.Models.ProductImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("ShoppingApp.Models.Review", b =>
@@ -361,6 +394,17 @@ namespace ShoppingApp.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("ShoppingApp.Models.ProductImage", b =>
+                {
+                    b.HasOne("ShoppingApp.Models.Product", "Product")
+                        .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("ShoppingApp.Models.Review", b =>
                 {
                     b.HasOne("ShoppingApp.Models.Product", "Product")
@@ -395,6 +439,8 @@ namespace ShoppingApp.Migrations
             modelBuilder.Entity("ShoppingApp.Models.Product", b =>
                 {
                     b.Navigation("Carts");
+
+                    b.Navigation("Images");
 
                     b.Navigation("OrderItems");
 

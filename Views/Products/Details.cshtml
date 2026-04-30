@@ -14,11 +14,25 @@
 <div class="container py-5">
     <div class="row">
         <div class="col-lg-6 mb-4 mb-lg-0">
-            <div class="product-image-container p-4 rounded-5 bg-white shadow-sm border border-light">
-                <img src="@(string.IsNullOrEmpty(Model?.ImageUrl) ? $"https://via.placeholder.com/600x600?text={Model?.Name}" : Model.ImageUrl)" 
-                     class="img-fluid rounded-4 w-100" alt="@Model?.Name"
+            <div class="product-image-container p-4 rounded-5 bg-white shadow-sm border border-light mb-3 text-center">
+                <img id="mainProductImage" src="@(Model.ImageUrls != null && Model.ImageUrls.Any() ? Model.ImageUrls.First() : (string.IsNullOrEmpty(Model.ImageUrl) ? $"https://via.placeholder.com/600x600?text={Model.Name}" : Model.ImageUrl))" 
+                     class="img-fluid rounded-4" alt="@Model.Name" style="max-height: 500px; object-fit: contain;"
                      onerror="handleImageError(this)">
             </div>
+            @if (Model.ImageUrls != null && Model.ImageUrls.Count > 1)
+            {
+                <div class="row g-2 px-2">
+                    @foreach (var url in Model.ImageUrls)
+                    {
+                        <div class="col-3">
+                            <div class="thumbnail-container p-1 border rounded-3 cursor-pointer @(url == Model.ImageUrls.First() ? "border-primary shadow-sm" : "border-light")" 
+                                 onclick="changeImage('@url', this)">
+                                <img src="@url" class="img-fluid rounded-2" style="height: 80px; width: 100%; object-fit: cover;">
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
         </div>
         <div class="col-md-6">
             <nav aria-label="breadcrumb">
@@ -265,6 +279,18 @@
 </style>
 
 <script>
+    function changeImage(url, element) {
+        document.getElementById('mainProductImage').src = url;
+        // Remove active class from all thumbnails
+        document.querySelectorAll('.thumbnail-container').forEach(t => {
+            t.classList.remove('border-primary', 'shadow-sm');
+            t.classList.add('border-light');
+        });
+        // Add active class to clicked thumbnail
+        element.classList.remove('border-light');
+        element.classList.add('border-primary', 'shadow-sm');
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const stars = document.querySelectorAll('.star-input');
         const ratingInput = document.getElementById('selected-rating');

@@ -103,17 +103,32 @@
                             </div>
 
                             <div class="mb-4">
-                                <label asp-for="ImageUrl" class="form-label fw-bold small text-uppercase tracking-wider">Product Image URL</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-0 px-3"><i class="bi bi-image text-muted"></i></span>
-                                    <input asp-for="ImageUrl" id="productImageUrl" class="form-control bg-white border-0 py-3" placeholder="Paste image URL here..." required type="url" />
+                                <label class="form-label fw-bold small text-uppercase tracking-wider">Product Image Links</label>
+                                <div id="imageLinksContainer">
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text bg-white border-0 px-3"><i class="bi bi-link-45deg text-muted"></i></span>
+                                        <input name="imageUrls" class="form-control bg-white border-0 py-3 image-link-input" placeholder="Paste image URL here..." required type="url" oninput="updatePreviews()" />
+                                        <button type="button" class="btn btn-white border-0 text-danger" onclick="removeLink(this)" style="display: none;"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill mt-2" onclick="addLink()">
+                                    <i class="bi bi-plus-lg me-1"></i> Add Another Link
+                                </button>
+                                <div class="mt-2 text-muted x-small d-flex align-items-center">
+                                    <i class="bi bi-info-circle me-1"></i> 
+                                    <span>Links must start with <strong>https://</strong> or <strong>http://</strong></span>
                                 </div>
                             </div>
 
                             <div class="flex-grow-1 d-flex flex-column">
                                 <label class="form-label fw-bold small text-uppercase tracking-wider">Live Preview</label>
-                                <div class="preview-box border-0 rounded-4 bg-white d-flex align-items-center justify-content-center p-3 shadow-inner" style="flex-grow: 1; min-height: 200px;">
-                                    <img id="imagePreviewMini" src="https://via.placeholder.com/300x200?text=No+Image+Selected" class="img-fluid rounded-3 object-fit-contain" alt="Preview" style="max-height: 300px;">
+                                <div class="preview-box border-0 rounded-4 bg-white p-3 shadow-inner overflow-auto" style="flex-grow: 1; min-height: 200px;">
+                                    <div id="imagePreviewContainer" class="row g-2">
+                                        <div class="col-12 text-center py-5 text-muted">
+                                            <i class="bi bi-image fs-1 d-block mb-2 opacity-25"></i>
+                                            <span>No Valid URLs</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -144,8 +159,16 @@
             <div class="modal-body p-4">
                 <div class="row">
                     <div class="col-md-5">
-                        <div class="preview-image-container p-2 border rounded-4 bg-light mb-3 text-center">
-                            <img id="previewImage" src="" alt="Product Preview" class="img-fluid rounded-3" style="max-height: 250px;">
+                        <div id="modalImageCarousel" class="carousel slide preview-image-container p-2 border rounded-4 bg-light mb-3" data-bs-ride="carousel">
+                            <div class="carousel-inner" id="modalCarouselInner">
+                                <!-- Images will be injected here -->
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#modalImageCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#modalImageCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            </button>
                         </div>
                     </div>
                     <div class="col-md-7">
@@ -218,6 +241,7 @@
         
         let debounceTimer;
         let isRejected = false;
+        const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
 
         function runDuplicateCheck() {
             clearTimeout(debounceTimer);
@@ -271,22 +295,60 @@
             runDuplicateCheck();
         }
 
-        // Image Preview Logic
-        const imageUrlInput = document.getElementById('productImageUrl');
-        const imagePreview = document.getElementById('imagePreviewMini');
+        // Image Link Logic
+        const imageLinksContainer = document.getElementById('imageLinksContainer');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const modalCarouselInner = document.getElementById('modalCarouselInner');
 
-        imageUrlInput.addEventListener('input', function() {
-            const url = this.value.trim();
-            if (url) {
-                imagePreview.src = url;
-            } else {
-                imagePreview.src = 'https://via.placeholder.com/300x200?text=No+Image+Selected';
+        function addLink() {
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <span class="input-group-text bg-white border-0 px-3"><i class="bi bi-link-45deg text-muted"></i></span>
+                <input name="imageUrls" class="form-control bg-white border-0 py-3 image-link-input" placeholder="Paste image URL here..." required type="url" oninput="updatePreviews()" />
+                <button type="button" class="btn btn-white border-0 text-danger" onclick="removeLink(this)"><i class="bi bi-trash"></i></button>
+            `;
+            imageLinksContainer.appendChild(div);
+            updatePreviews();
+        }
+
+        function removeLink(btn) {
+            btn.closest('.input-group').remove();
+            updatePreviews();
+        }
+
+        function updatePreviews() {
+            const inputs = document.querySelectorAll('.image-link-input');
+            imagePreviewContainer.innerHTML = '';
+            let validCount = 0;
+
+            inputs.forEach((input, index) => {
+                const url = input.value.trim();
+                if (url && input.checkValidity()) {
+                    validCount++;
+                    const col = document.createElement('div');
+                    col.className = 'col-4';
+                    col.innerHTML = `
+                        <div class="position-relative">
+                            <img src="${url}" class="img-fluid rounded-3 shadow-sm border ${validCount === 1 ? 'border-primary border-2' : ''}" style="height: 80px; width: 100%; object-fit: cover;" onerror="this.src='https://via.placeholder.com/80?text=Error'">
+                            ${validCount === 1 ? '<span class="position-absolute top-0 end-0 badge rounded-circle bg-primary p-1 m-1 shadow-sm"><i class="bi bi-check-lg text-white"></i></span>' : ''}
+                            ${validCount === 1 ? '<div class="x-small text-primary fw-bold text-center mt-1" style="font-size: 0.6rem;">MAIN</div>' : ''}
+                        </div>
+                    `;
+                    imagePreviewContainer.appendChild(col);
+                }
+            });
+
+            if (validCount === 0) {
+                imagePreviewContainer.innerHTML = `
+                    <div class="col-12 text-center py-5 text-muted">
+                        <i class="bi bi-image fs-1 d-block mb-2 opacity-25"></i>
+                        <span>No Valid URLs</span>
+                    </div>
+                `;
             }
-        });
+        }
 
-        // Modal Logic
-        const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
-        
         function showConfirmationModal() {
             if (isRejected) {
                 alert("Cannot proceed: A product with this name already exists in the database.");
@@ -303,7 +365,26 @@
             document.getElementById('previewPrice').innerText = document.getElementById('productPrice').value;
             document.getElementById('previewStock').innerText = document.getElementById('productStock').value;
             document.getElementById('previewCategory').innerText = document.getElementById('categoryInput').value;
-            document.getElementById('previewImage').src = document.getElementById('productImageUrl').value;
+            
+            // Populate Modal Carousel
+            modalCarouselInner.innerHTML = '';
+            const inputs = document.querySelectorAll('.image-link-input');
+            let hasImages = false;
+
+            inputs.forEach((input, index) => {
+                const url = input.value.trim();
+                if (url && input.checkValidity()) {
+                    hasImages = true;
+                    const item = document.createElement('div');
+                    item.className = `carousel-item ${!modalCarouselInner.children.length ? 'active' : ''}`;
+                    item.innerHTML = `<img src="${url}" class="d-block w-100 rounded-3" style="max-height: 250px; object-fit: contain;">`;
+                    modalCarouselInner.appendChild(item);
+                }
+            });
+
+            if (!hasImages) {
+                modalCarouselInner.innerHTML = `<div class="carousel-item active text-center py-5"><i class="bi bi-image fs-1 text-muted"></i><p>No valid image links</p></div>`;
+            }
             
             // Limit preview description length
             const desc = document.getElementById('productDesc').value;

@@ -28,7 +28,7 @@ namespace ShoppingApp.Models
         public virtual DbSet<Product> Products { get; set; }
 
         public virtual DbSet<Review> Reviews { get; set; }
-
+        public virtual DbSet<ProductImage> ProductImages { get; set; }
         public virtual DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

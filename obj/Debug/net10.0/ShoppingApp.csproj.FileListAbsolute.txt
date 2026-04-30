@@ -678,14 +678,8 @@ C:\Users\midhu\OneDrive\Desktop\ShoppingApp\obj\Debug\net10.0\refint\ShoppingApp
 C:\Users\midhu\OneDrive\Desktop\ShoppingApp\obj\Debug\net10.0\ShoppingApp.pdb
 C:\Users\midhu\OneDrive\Desktop\ShoppingApp\obj\Debug\net10.0\ShoppingApp.genruntimeconfig.cache
 C:\Users\midhu\OneDrive\Desktop\ShoppingApp\obj\Debug\net10.0\ref\ShoppingApp.dll
-C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\publish\web.config
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\appsettings.Development.json
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\appsettings.json
-C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\publish\appsettings.Development.json
-C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\publish\appsettings.json
-C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\publish\ShoppingApp.deps.json
-C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\publish\ShoppingApp.runtimeconfig.json
-C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\publish\ShoppingApp.staticwebassets.endpoints.json
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\ShoppingApp.staticwebassets.runtime.json
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\ShoppingApp.staticwebassets.endpoints.json
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\bin\Debug\net10.0\ShoppingApp.exe
@@ -938,10 +932,10 @@ C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\ne
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\staticwebassets.development.json
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\staticwebassets.build.endpoints.json
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\swae.build.ex.cache
-C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\Shopping.B1597000.Up2Date
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\ShoppingApp.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\refint\ShoppingApp.dll
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\ShoppingApp.pdb
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\ShoppingApp.genruntimeconfig.cache
 C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\ref\ShoppingApp.dll
+C:\Users\midhu\OneDrive\Desktop\Nidhin\claysys_projects\ShoppingApp\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

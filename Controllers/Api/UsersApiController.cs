@@ -9,7 +9,7 @@ namespace ShoppingApp.Controllers.Api
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UsersApiController(IUserService userService) : ControllerBase
+    public partial class UsersApiController(IUserService userService) : ControllerBase
     {
         private readonly IUserService _userService = userService;
 
@@ -29,13 +29,6 @@ namespace ShoppingApp.Controllers.Api
             return Ok(new ApiResponse<UserDto>(user));
         }
 
-        [HttpPost("register")]
-        public async Task<ActionResult<ApiResponse<UserDto>>> Register(UserRegisterDto registerDto)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            
-            var response = await _userService.RegisterUserAsync(registerDto);
-            return response.Success ? Ok(response) : BadRequest(response);
-        }
+
     }
 }

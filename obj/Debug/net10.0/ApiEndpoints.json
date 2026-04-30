@@ -236,6 +236,11 @@
         "IsRequired": false
       },
       {
+        "Name": "Images",
+        "Type": "System.Collections.Generic.ICollection\u00601[[ShoppingApp.Models.ProductImage, ShoppingApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "IsRequired": false
+      },
+      {
         "Name": "image",
         "Type": "Microsoft.AspNetCore.Http.IFormFile",
         "IsRequired": false
@@ -319,6 +324,11 @@
       {
         "Name": "Reviews",
         "Type": "System.Collections.Generic.ICollection\u00601[[ShoppingApp.Models.Review, ShoppingApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Images",
+        "Type": "System.Collections.Generic.ICollection\u00601[[ShoppingApp.Models.ProductImage, ShoppingApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "IsRequired": false
       },
       {

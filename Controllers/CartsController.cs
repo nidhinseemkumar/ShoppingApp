@@ -25,43 +25,5 @@ namespace ShoppingApp.Controllers
             _userService = userService;
             _orderService = orderService;
         }
-
-        // GET: Carts
-        public async Task<IActionResult> Index()
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out int userId))
-            {
-                return View(await _cartService.GetCartItemsAsync(userId));
-            }
-            return RedirectToAction("Login", "Users");
-        }
-
-        public IActionResult Checkout()
-        {
-            if (User.Identity?.IsAuthenticated != true)
-            {
-                return RedirectToAction("Login", "Users");
-            }
-            return RedirectToAction("Index", "Payments");
-        }
-
-        public async Task<IActionResult> BuyNow(int productId)
-        {
-            if (User.Identity?.IsAuthenticated != true)
-            {
-                return RedirectToAction("Login", "Users", new { returnUrl = Request.Path + Request.QueryString });
-            }
-
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out int userId))
-            {
-                // We create a temporary order or just pass the product ID to the payment page
-                // For simplicity, we'll let the user choose payment for this product
-                return RedirectToAction("Index", "Payments", new { productId = productId });
-            }
-
-            return RedirectToAction("Index", "Home");
-        }
     }
 }

@@ -87,14 +87,45 @@
                                 </div>
                             </div>
 
-                            <!-- Image URL -->
+                            <!-- Image Links -->
                             <div class="col-md-12">
-                                <label asp-for="ImageUrl" class="form-label fw-bold">Product Image URL</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 px-3"><i class="bi bi-image text-muted"></i></span>
-                                    <input asp-for="ImageUrl" class="form-control bg-light border-0 rounded-end-4 py-3" placeholder="Image URL" required type="url" />
+                                <label class="form-label fw-bold">Product Image Links</label>
+                                <div id="imageLinksContainer">
+                                    @if (Model.Images != null && Model.Images.Any())
+                                    {
+                                        @foreach (var img in Model.Images)
+                                        {
+                                            <div class="input-group mb-2">
+                                                <span class="input-group-text bg-light border-0 px-3"><i class="bi bi-link-45deg text-muted"></i></span>
+                                                <input name="imageUrls" class="form-control bg-light border-0 py-3 image-link-input" value="@img.ImageUrl" required type="url" oninput="updatePreviews()" />
+                                                <button type="button" class="btn btn-white border-0 text-danger" onclick="removeLink(this)"><i class="bi bi-trash"></i></button>
+                                            </div>
+                                        }
+                                    }
+                                    else if (!string.IsNullOrEmpty(Model.ImageUrl))
+                                    {
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text bg-light border-0 px-3"><i class="bi bi-link-45deg text-muted"></i></span>
+                                            <input name="imageUrls" class="form-control bg-light border-0 py-3 image-link-input" value="@Model.ImageUrl" required type="url" oninput="updatePreviews()" />
+                                            <button type="button" class="btn btn-white border-0 text-danger" onclick="removeLink(this)"><i class="bi bi-trash"></i></button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text bg-light border-0 px-3"><i class="bi bi-link-45deg text-muted"></i></span>
+                                            <input name="imageUrls" class="form-control bg-light border-0 py-3 image-link-input" placeholder="Paste image URL here..." required type="url" oninput="updatePreviews()" />
+                                            <button type="button" class="btn btn-white border-0 text-danger" onclick="removeLink(this)" style="display: none;"><i class="bi bi-trash"></i></button>
+                                        </div>
+                                    }
                                 </div>
-                                <span asp-validation-for="ImageUrl" class="text-danger small ms-2"></span>
+                                <button type="button" class="btn btn-outline-dark btn-sm rounded-pill mt-2" onclick="addLink()">
+                                    <i class="bi bi-plus-lg me-1"></i> Add Another Link
+                                </button>
+                                
+                                <div id="imagePreviewContainer" class="row g-2 mt-3">
+                                    <!-- Previews will appear here -->
+                                </div>
                             </div>
                         </div>
 
@@ -148,6 +179,52 @@
                 newCategoryBadge.style.display = 'none';
             }
         });
+
+        // Image Link Logic
+        const imageLinksContainer = document.getElementById('imageLinksContainer');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+
+        function addLink() {
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <span class="input-group-text bg-light border-0 px-3"><i class="bi bi-link-45deg text-muted"></i></span>
+                <input name="imageUrls" class="form-control bg-light border-0 py-3 image-link-input" placeholder="Paste image URL here..." required type="url" oninput="updatePreviews()" />
+                <button type="button" class="btn btn-white border-0 text-danger" onclick="removeLink(this)"><i class="bi bi-trash"></i></button>
+            `;
+            imageLinksContainer.appendChild(div);
+            updatePreviews();
+        }
+
+        function removeLink(btn) {
+            btn.closest('.input-group').remove();
+            updatePreviews();
+        }
+
+        function updatePreviews() {
+            const inputs = document.querySelectorAll('.image-link-input');
+            imagePreviewContainer.innerHTML = '';
+            let validCount = 0;
+
+            inputs.forEach((input, index) => {
+                const url = input.value.trim();
+                if (url && input.checkValidity()) {
+                    validCount++;
+                    const col = document.createElement('div');
+                    col.className = 'col-3';
+                    col.innerHTML = `
+                        <div class="position-relative">
+                            <img src="${url}" class="img-fluid rounded-4 shadow-sm border" style="height: 80px; width: 100%; object-fit: cover;" onerror="this.src='https://via.placeholder.com/80?text=Error'">
+                            ${validCount === 1 ? '<span class="position-absolute top-0 start-0 badge bg-primary x-small m-1">Main</span>' : ''}
+                        </div>
+                    `;
+                    imagePreviewContainer.appendChild(col);
+                }
+            });
+        }
+
+        // Initialize previews on load
+        window.onload = updatePreviews;
 
         (function () {
             'use strict'
